@@ -179,3 +179,27 @@ QuakeWebTools.ImageUtil.expandImageData = function(image_data, palette, mip_leve
 
     return img;
 }
+
+/**
+*
+*/
+QuakeWebTools.ImageUtil.generateHTMLPreview = function(image_directory, arraybuffer, palette) {
+    var fragment = new DocumentFragment();
+    var IU = QuakeWebTools.ImageUtil;
+
+    for (var i = 0; i < image_directory.length; ++i) {
+        var entry = image_directory[i];
+        var image_data = IU.getImageData(entry.name, arraybuffer, entry);
+        var img = IU.expandImageData(image_data, palette);
+            img.title = entry.name + " (" + image_data.width + "x" + image_data.height + ", " + entry.size + " bytes)";
+            img.download = name + ".png";
+        var div = document.createElement("div");
+        div.appendChild(img);
+        div.innerHTML += "<p style=\"position:relative;top:" + -(img.height + 8) + ";left:" + (img.width + 8) + "\">"
+                       + entry.name + "<br>(" + image_data.width + "x" + image_data.height +")<br>" + entry.size + " bytes</p>";
+        fragment.appendChild(div);
+    }
+
+    document.getElementById("main").appendChild(fragment);
+}
+

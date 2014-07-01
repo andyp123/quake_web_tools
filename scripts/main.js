@@ -150,7 +150,8 @@ function app_main() {
         var file = g_DATA["data/e1m1.bsp"];
         var bsp = new QWT.BSP(file.path, file.data);
 
-        bsp.generateHTMLPreview(QWT.DEFAULT_PALETTE);
+        QWT.ImageUtil.generateHTMLPreview(bsp.miptex_directory, bsp.ab, QWT.DEFAULT_PALETTE);
+        //bsp.generateHTMLPreview(QWT.DEFAULT_PALETTE);
     });
    //  g_DATA["data/colormap.lmp"] = QWT.FileUtil.getFile("data/colormap.lmp", "arraybuffer", function() {
    //      var file = g_DATA["data/colormap.lmp"];
