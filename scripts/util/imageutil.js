@@ -79,6 +79,7 @@ QuakeWebTools.ImageUtil.getImageData = function(name, arraybuffer, entry) {
         header_type = IU.HEADER_MIPTEX;
     }
 
+    // FIXME: convert to use DataStream.js
     var byteofs = entry.offset;
 
     switch (header_type) {
@@ -92,25 +93,25 @@ QuakeWebTools.ImageUtil.getImageData = function(name, arraybuffer, entry) {
         var ofs3 = entry.offset + data.getInt32(byteofs, le);   byteofs += 4;
         var ofs4 = entry.offset + data.getInt32(byteofs, le);
         // get pixels at various mip levels
-        image_data.pixels  = arraybuffer.slice(ofs1, ofs1 + image_data.width * image_data.height);
-        image_data.pixels2 = arraybuffer.slice(ofs2, ofs2 + Math.floor((image_data.width * image_data.height) / 4));
-        image_data.pixels3 = arraybuffer.slice(ofs3, ofs3 + Math.floor((image_data.width * image_data.height) / 8));
-        image_data.pixels4 = arraybuffer.slice(ofs4, ofs4 + Math.floor((image_data.width * image_data.height) / 16));
+        image_data.pixels  = new Uint8Array(arraybuffer.slice(ofs1, ofs1 + image_data.width * image_data.height));
+        image_data.pixels2 = new Uint8Array(arraybuffer.slice(ofs2, ofs2 + Math.floor((image_data.width * image_data.height) / 4)));
+        image_data.pixels3 = new Uint8Array(arraybuffer.slice(ofs3, ofs3 + Math.floor((image_data.width * image_data.height) / 8)));
+        image_data.pixels4 = new Uint8Array(arraybuffer.slice(ofs4, ofs4 + Math.floor((image_data.width * image_data.height) / 16)));
         break;
     case IU.HEADER_SIMPLE:
         image_data.width = data.getInt32(byteofs, le);      byteofs += 4;
         image_data.height = data.getInt32(byteofs, le);     byteofs += 4;
-        image_data.pixels = arraybuffer.slice(byteofs, byteofs + entry.size);
+        image_data.pixels = new Uint8Array(arraybuffer.slice(byteofs, byteofs + entry.size));
         break;
     case IU.HEADER_NONE:
         // this will be special case and palette only, so width and height are already set
-        image_data.pixels = arraybuffer.slice(byteofs, byteofs + entry.size);
+        image_data.pixels = new Uint8Array(arraybuffer.slice(byteofs, byteofs + entry.size));
         break;
     default: // FIXME: can never happen. Delete?
         console.log("Error reading image data: Unrecognised header type, '" + header_type + "'");
         return null;
     }
-
+    
     return image_data;
 }
 
@@ -128,11 +129,11 @@ QuakeWebTools.ImageUtil.expandImageData = function(image_data, palette, mip_leve
     var width = image_data.width;
     var height = image_data.height;
     if (mip_level && mip_level > 1 && mip_level < 5 && image_data["pixels" + mip_level]) {
-        pixels = new Uint8Array(image_data["pixels" + mip_level]);
+        pixels = image_data["pixels" + mip_level];
         width >>= mip_level - 1;
         height >>= mip_level - 1;
     } else {
-        pixels = new Uint8Array(image_data.pixels);
+        pixels = image_data.pixels;
     }
     var image_size = width * height;
 
@@ -153,10 +154,10 @@ QuakeWebTools.ImageUtil.expandImageData = function(image_data, palette, mip_leve
             if (pixels[i] == trans_index) {
                 imgd.data[p + 3] = 0;
             } else {
-                var c = colors[pixels[i]];
-                imgd.data[p    ] = c[0];
-                imgd.data[p + 1] = c[1];
-                imgd.data[p + 2] = c[2];
+                var c = 3 * pixels[i];
+                imgd.data[p    ] = colors[c];
+                imgd.data[p + 1] = colors[c + 1];
+                imgd.data[p + 2] = colors[c + 2];
                 imgd.data[p + 3] = 255;
             }
         }

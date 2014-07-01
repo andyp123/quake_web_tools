@@ -15,50 +15,43 @@ var QuakeWebTools = QuakeWebTools || {};
 QuakeWebTools.PAK = function(path, arraybuffer) {
     this.filename = QuakeWebTools.FileUtil.getFilename(path);
     this.ab = arraybuffer;
+
     this.header = null;
     this.directory = null;
 
-    this.initHeader();
-    this.initDirectory();
+    this.init();
 }
 
-/**
-* Initialize the PAK header
-*/
-QuakeWebTools.PAK.prototype.initHeader = function() {
-    var data = new DataView(this.ab);
-    var header = {};
-    var le = true; // little endian
+QuakeWebTools.PAK.HEADER_T = [
+    "pak_id",       "string:4", // "PACK"
+    "dir_offset",   "int32",
+    "dir_size",     "int32"
+];
 
-    header.pak_id = QuakeWebTools.FileUtil.getString(data, 0, 4, le);
-    header.dir_offset = data.getInt32(4, le);
-    header.dir_size = data.getInt32(8, le);
-    header.dir_entries = header.dir_size / 64; // size of directory entry is 64 bytes
-
-    this.header = header;
-}
+QuakeWebTools.PAK.ENTRY_T = [
+    "path",         "string:56",
+    "offset",       "int32",
+    "size",         "int32"
+];
 
 /**
-* Initialize the PAK directory
+* Initialize the PAK.
 */
-QuakeWebTools.PAK.prototype.initDirectory = function() {
-    var data = new DataView(this.ab, this.header.dir_offset, this.header.dir_size);
+QuakeWebTools.PAK.prototype.init = function() {
+    var ds = new DataStream(this.ab, 0, DataStream.LITTLE_ENDIAN);
+
+    this.header = ds.readStruct(QuakeWebTools.PAK.HEADER_T);
+    this.header.dir_entries = this.header.dir_size / 64; // size of ENTRY_T is 64 bytes
+
+    var trim = QuakeWebTools.FileUtil.trimNullTerminatedString;
     var directory = [];
-    var le = true; // little endian
-
-    var getString = QuakeWebTools.FileUtil.getString;
-
+    var ENTRY_T = QuakeWebTools.PAK.ENTRY_T;
+    ds.seek(this.header.dir_offset);
     for (var i = 0; i < this.header.dir_entries; ++i) {
-        var entry = {};
-        var byteofs = i * 64;
-
-        entry.path = getString(data, byteofs, 56, le);  byteofs += 56;
-        entry.offset = data.getInt32(byteofs, le);      byteofs += 4;
-        entry.size = data.getInt32(byteofs, le);
-
+        var entry = ds.readStruct(ENTRY_T);
+        entry.path = trim(entry.path); // must trim the string because DataStream.js leaves it 0 padded
         directory[i] = entry;
     }
-
     this.directory = directory;
 }
 

@@ -15,12 +15,28 @@ var QuakeWebTools = QuakeWebTools || {};
 QuakeWebTools.WAD = function(path, arraybuffer) {
     this.filename = QuakeWebTools.FileUtil.getFilename(path);
     this.ab = arraybuffer;
+
     this.header = null;
     this.directory = null;
 
-    this.initHeader();
-    this.initDirectory();
+    this.init();
 }
+
+QuakeWebTools.WAD.HEADER_T = [
+    "wad_id",       "string:4",
+    "dir_entries",  "int32",
+    "dir_offset",   "int32"
+];
+
+QuakeWebTools.WAD.ENTRY_T = [
+    "offset",       "int32",
+    "dsize",        "int32",
+    "size",         "int32",
+    "type",         "uint8",
+    "compression",  "uint8",
+    "padding",      "uint16",
+    "name",         "string:16"
+];
 
 QuakeWebTools.WAD.TYPE_PALETTE = "@".charCodeAt(0);
 QuakeWebTools.WAD.TYPE_STATUS  = "B".charCodeAt(0);
@@ -28,45 +44,23 @@ QuakeWebTools.WAD.TYPE_MIPTEX  = "D".charCodeAt(0);
 QuakeWebTools.WAD.TYPE_CONSOLE = "E".charCodeAt(0);
 
 /**
-* Initialize the WAD header.
+* Initialize the WAD.
 */
-QuakeWebTools.WAD.prototype.initHeader = function() {
-    var data = new DataView(this.ab);
-    var header = {};
-    var le = true; // little endian
+QuakeWebTools.WAD.prototype.init = function() {
+    var ds = new DataStream(this.ab, 0, DataStream.LITTLE_ENDIAN);
 
-    header.wad_id = QuakeWebTools.FileUtil.getString(data, 0, 4, le);
-    header.dir_entries = data.getInt32(4, le);
-    header.dir_offset = data.getInt32(8, le);
-    header.dir_size = header.dir_entries * 32; // size of directory entry is 32 bytes
+    this.header = ds.readStruct(QuakeWebTools.WAD.HEADER_T);
+    this.header.dir_size = this.header.dir_entries * 32; // size of ENTRY_T is 32 bytes
 
-    this.header = header;
-}
-
-/*
-* Initialize the WAD directory.
-*/
-QuakeWebTools.WAD.prototype.initDirectory = function() {
-    var data = new DataView(this.ab, this.header.dir_offset, this.header.dir_size);
+    var trim = QuakeWebTools.FileUtil.trimNullTerminatedString;
     var directory = [];
-    var le = true; // little endian
-
-    var getString = QuakeWebTools.FileUtil.getString;
-
+    var ENTRY_T = QuakeWebTools.WAD.ENTRY_T;
+    ds.seek(this.header.dir_offset);
     for (var i = 0; i < this.header.dir_entries; ++i) {
-        var entry = {};
-        var byteofs = i * 32;
-
-        entry.offset = data.getInt32(byteofs, le);      byteofs += 4;
-        entry.dsize = data.getInt32(byteofs, le);       byteofs += 4;
-        entry.size = data.getInt32(byteofs, le);        byteofs += 4;
-        entry.type = data.getUint8(byteofs, le);        byteofs += 1;
-        entry.compression = data.getUint8(byteofs, le); byteofs += 3; // compression is 1 byte, but there are also 2 bytes of padding
-        entry.name = getString(data, byteofs, 16, le);
-
+        var entry = ds.readStruct(ENTRY_T);
+        entry.name = trim(entry.name);
         directory[i] = entry;
     }
-
     this.directory = directory;
 }
 

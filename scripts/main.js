@@ -165,7 +165,7 @@ function app_main() {
         //console.log(wad.toString());
         //console.log(wad.toString_ListContents(true));
         wad.generateHTMLPreview(QWT.DEFAULT_PALETTE);
-    });
+   });
 }
 
 

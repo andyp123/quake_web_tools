@@ -11,26 +11,12 @@ var QuakeWebTools = QuakeWebTools || {};
 * @constructor
 * @param {String} path - The path and filename.
 * @param {ArrayBuffer} arraybuffer - The file data as an ArrayBuffer.
-* @throws Will throw an error if the size of the input is not 768 bytes.
 */
 QuakeWebTools.PAL = function(path, arraybuffer) {
-    if(arraybuffer.byteLength != 768) {
-        throw "PAL input must be a 768 byte arraybuffer";
-    }
     this.filename = QuakeWebTools.FileUtil.getFilename(path);
     this.ab = arraybuffer;
 
-    var data = new DataView(this.ab);
-    var le = true; // little endian
-
-    this.colors = new Array(256);
-    for (var i = 0, j = 0; i < 256; i += 1, j += 3) {
-        this.colors[i] = [
-            data.getUint8(j, le),
-            data.getUint8(j + 1, le),
-            data.getUint8(j + 2, le)
-        ];
-    }
+    this.colors = new Uint8Array(this.ab);
 }
 
 /** @const Colors at indices above and including 240 are unlit in the Quake engine. */
@@ -42,30 +28,31 @@ QuakeWebTools.PAL.FULLBRITE_INDEX = 240;
 * @param {QuakeImageData} image_data - Image data in the form { name, width, height, pixels }.
 * @return {Image} Returns an Image object.
 */
-QuakeWebTools.PAL.prototype.expandImageData = function(image_data) {
-    var canvas = document.createElement("canvas");
-        canvas.width = image_data.width;
-        canvas.height = image_data.height;
-    var ctx = canvas.getContext("2d");
-    var imgd = ctx.createImageData(image_data.width, image_data.height);
+// QuakeWebTools.PAL.prototype.expandImageData = function(image_data) {
+//     var canvas = document.createElement("canvas");
+//         canvas.width = image_data.width;
+//         canvas.height = image_data.height;
+//     var ctx = canvas.getContext("2d");
+//     var imgd = ctx.createImageData(image_data.width, image_data.height);
 
-    var image_size = image_data.width * image_data.height;
-    var pixels = new Uint8Array(image_data.pixels);
-    for (var i = 0; i < image_size; ++i) {
-        var c = this.colors[pixels[i]];
-        var p = 4 * i;
-        imgd.data[p    ] = c[0];
-        imgd.data[p + 1] = c[1];
-        imgd.data[p + 2] = c[2];
-        imgd.data[p + 3] = 255;
-    }
+//     var image_size = image_data.width * image_data.height;
+//     var pixels = image_data.pixels;
+//     var colors = this.colors;
+//     for (var i = 0; i < image_size; ++i) {
+//         var p = 4 * i;
+//         var c = 3 * pixels[i];
+//         imgd.data[p    ] = colors[c];
+//         imgd.data[p + 1] = colors[c + 1];
+//         imgd.data[p + 2] = colors[c + 2];
+//         imgd.data[p + 3] = 255;
+//     }
 
-    ctx.putImageData(imgd, 0, 0);
-    var img = new Image();
-        img.src = canvas.toDataURL("image/png");
+//     ctx.putImageData(imgd, 0, 0);
+//     var img = new Image();
+//         img.src = canvas.toDataURL("image/png");
 
-    return img;
-}
+//     return img;
+// }
 
 /**
 * Get a String representing the basic file information.
