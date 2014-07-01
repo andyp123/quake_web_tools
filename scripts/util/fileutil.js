@@ -13,12 +13,18 @@ var QuakeWebTools = QuakeWebTools || {};
 */
 QuakeWebTools.FileUtil = {};
 
-// FIXME: remove this and use DataStream.js
-QuakeWebTools.FileUtil.getString = function(dataview, offset, length, little_endian) {
+/**
+* Read a null-terminated string of maximum length from a dataview
+* @param {DataView} dataview - The DataView (or ArrayBuffer) to read characters from.
+* @param {Number} offset - Initial offset into the data view.
+* @param {Number} length - Number of bytes to read.
+* @static
+*/
+QuakeWebTools.FileUtil.getString = function(dataview, offset, length) {
     var str = "";
 
     for (var i = 0; i < length; ++i) {
-        var charcode = dataview.getUint8(offset + i, little_endian);
+        var charcode = dataview.getUint8(offset + i);
         if (charcode == 0) break;
         str += String.fromCharCode(charcode);
     }

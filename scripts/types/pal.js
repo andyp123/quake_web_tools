@@ -22,38 +22,6 @@ QuakeWebTools.PAL = function(path, arraybuffer) {
 /** @const Colors at indices above and including 240 are unlit in the Quake engine. */
 QuakeWebTools.PAL.FULLBRITE_INDEX = 240;
 
-/*
-* Expands an array of paletized pixel data into an Image object that can be displayed
-* in a browser.
-* @param {QuakeImageData} image_data - Image data in the form { name, width, height, pixels }.
-* @return {Image} Returns an Image object.
-*/
-// QuakeWebTools.PAL.prototype.expandImageData = function(image_data) {
-//     var canvas = document.createElement("canvas");
-//         canvas.width = image_data.width;
-//         canvas.height = image_data.height;
-//     var ctx = canvas.getContext("2d");
-//     var imgd = ctx.createImageData(image_data.width, image_data.height);
-
-//     var image_size = image_data.width * image_data.height;
-//     var pixels = image_data.pixels;
-//     var colors = this.colors;
-//     for (var i = 0; i < image_size; ++i) {
-//         var p = 4 * i;
-//         var c = 3 * pixels[i];
-//         imgd.data[p    ] = colors[c];
-//         imgd.data[p + 1] = colors[c + 1];
-//         imgd.data[p + 2] = colors[c + 2];
-//         imgd.data[p + 3] = 255;
-//     }
-
-//     ctx.putImageData(imgd, 0, 0);
-//     var img = new Image();
-//         img.src = canvas.toDataURL("image/png");
-
-//     return img;
-// }
-
 /**
 * Get a String representing the basic file information.
 */

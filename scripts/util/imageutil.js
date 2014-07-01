@@ -111,7 +111,7 @@ QuakeWebTools.ImageUtil.getImageData = function(name, arraybuffer, entry) {
         console.log("Error reading image data: Unrecognised header type, '" + header_type + "'");
         return null;
     }
-    
+
     return image_data;
 }
 

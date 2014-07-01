@@ -125,8 +125,6 @@ function app_init() {
     g_DATA["data/quake.pal"] = QWT.FileUtil.getFile("data/quake.pal", "arraybuffer", function() {
         var file = g_DATA["data/quake.pal"];
         var pal = new QWT.PAL(file.path, file.data);
-        console.log(pal.toString());
-        //console.log(pal.toString_ListContents());
 
         QWT.DEFAULT_PALETTE = pal;
         app_main();
@@ -136,36 +134,40 @@ function app_init() {
 function app_main() {
     var QWT = QuakeWebTools;
 
-    g_DATA["data/s_explod.spr"] = QWT.FileUtil.getFile("data/s_explod.spr", "arraybuffer", function() {
-        var file = g_DATA["data/s_explod.spr"];
-        var spr = new QWT.SPR(file.path, file.data);
-    });
+    // g_DATA["data/s_explod.spr"] = QWT.FileUtil.getFile("data/s_explod.spr", "arraybuffer", function() {
+    //     var file = g_DATA["data/s_explod.spr"];
+    //     var spr = new QWT.SPR(file.path, file.data);
+    // });
 
-    g_DATA["data/pak0.pak"] = QWT.FileUtil.getFile("data/pak0.pak", "arraybuffer", function() {
-        var file = g_DATA["data/pak0.pak"];
-        loadPAK(file.path, file.data);
+    // g_DATA["data/pak0.pak"] = QWT.FileUtil.getFile("data/pak0.pak", "arraybuffer", function() {
+    //     var file = g_DATA["data/pak0.pak"];
 
-        // var pak = new QWT.PAK(file.path, file.data);
-        // console.log(pak.toString());
-        //console.log(pak.toString_ListContents());
-    });
-    g_DATA["data/colormap.lmp"] = QWT.FileUtil.getFile("data/colormap.lmp", "arraybuffer", function() {
-        var file = g_DATA["data/colormap.lmp"];
-        var lmp = new QWT.LMP(file.path, file.data);
-        console.log(lmp.toString());
+    //     loadPAK(file.path, file.data);
 
-        // test file
-        var image_data = QWT.ImageUtil.getImageData(lmp.filename, lmp.ab);
-        var img = QWT.ImageUtil.expandImageData(image_data, QWT.DEFAULT_PALETTE);
-        document.body.appendChild(img);
+    //     // var pak = new QWT.PAK(file.path, file.data);
+    // });
+    g_DATA["data/e1m1.bsp"] = QWT.FileUtil.getFile("data/e1m1.bsp", "arraybuffer", function() {
+        var file = g_DATA["data/e1m1.bsp"];
+        var bsp = new QWT.BSP(file.path, file.data);
+
+        bsp.generateHTMLPreview(QWT.DEFAULT_PALETTE);
     });
-    g_DATA["gfx.wad"] = QWT.FileUtil.getFile("data/gfx.wad", "arraybuffer", function() {
-        var file = g_DATA["gfx.wad"];
-        var wad = new QWT.WAD(file.path, file.data);
-        //console.log(wad.toString());
-        //console.log(wad.toString_ListContents(true));
-        wad.generateHTMLPreview(QWT.DEFAULT_PALETTE);
-   });
+   //  g_DATA["data/colormap.lmp"] = QWT.FileUtil.getFile("data/colormap.lmp", "arraybuffer", function() {
+   //      var file = g_DATA["data/colormap.lmp"];
+   //      var lmp = new QWT.LMP(file.path, file.data);
+   //      console.log(lmp.toString());
+
+   //      // test file
+   //      var image_data = QWT.ImageUtil.getImageData(lmp.filename, lmp.ab);
+   //      var img = QWT.ImageUtil.expandImageData(image_data, QWT.DEFAULT_PALETTE);
+   //      document.body.appendChild(img);
+   //  });
+   //  g_DATA["gfx.wad"] = QWT.FileUtil.getFile("data/common.wad", "arraybuffer", function() {
+   //      var file = g_DATA["gfx.wad"];
+   //      var wad = new QWT.WAD(file.path, file.data);
+
+   //      wad.generateHTMLPreview(QWT.DEFAULT_PALETTE);
+   // });
 }
 
 
