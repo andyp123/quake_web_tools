@@ -1,24 +1,27 @@
+<!DOCTYPE html>
 <html>
     <head>
+        <meta charset="utf-8">
+
         <title>Quake Web Tools</title>
-        <link rel="stylesheet" type="text/css" href="style.css">
+        <link rel="stylesheet" href="style.css">
 
         <!--lib-->
-        <script type="text/javascript" src="scripts/lib/DataStream.js"></script>
+        <script src="scripts/lib/DataStream.js"></script>
         <!--util-->
-        <script type="text/javascript" src="scripts/util/FileManager.js"></script>
-        <script type="text/javascript" src="scripts/util/FileUtil.js"></script>
-        <script type="text/javascript" src="scripts/util/ImageUtil.js"></script>
+        <script src="scripts/util/FileManager.js"></script>
+        <script src="scripts/util/FileUtil.js"></script>
+        <script src="scripts/util/ImageUtil.js"></script>
         <!--types-->
-        <script type="text/javascript" src="scripts/types/PAK.js"></script>
-        <script type="text/javascript" src="scripts/types/WAD.js"></script>
-        <script type="text/javascript" src="scripts/types/PAL.js"></script>
-        <script type="text/javascript" src="scripts/types/LMP.js"></script>
-        <script type="text/javascript" src="scripts/types/SPR.js"></script>
-        <script type="text/javascript" src="scripts/types/BSP.js"></script>
+        <script src="scripts/types/PAK.js"></script>
+        <script src="scripts/types/WAD.js"></script>
+        <script src="scripts/types/PAL.js"></script>
+        <script src="scripts/types/LMP.js"></script>
+        <script src="scripts/types/SPR.js"></script>
+        <script src="scripts/types/BSP.js"></script>
 
         <!--main-->
-        <script type="text/javascript" src="scripts/main.js"></script>
+        <script src="scripts/main.js"></script>
     </head>
 
     <body onload="app_init()">
@@ -26,17 +29,18 @@
         <article>
             <div class="filedrop" id="holder" style="width: 600px; height: 100px"><p>DROP FILES HERE</p></div> 
             <p id="status">File API & FileReader API not supported</p>
-            <p>Drag Quake file format files into the area above to load their content in your browser.</p>
+            <p>Drag Quake file format files (pak, wad, bsp, lmp, spr, mdl, map, pal) into the area above to load their content in your browser.</p>
         </article>
 
         <div id="main" style="width: 600px; border:0">
         </div>
 
     </body>
-
 </html>
 
 <script>
+// TODO: Clean up this mess and put it in a better location
+
 var holder = document.getElementById('holder'),
     state = document.getElementById('status');
 

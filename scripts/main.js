@@ -76,39 +76,7 @@ Rename textures
 Should be able to preview and edit textures easily.
 Texture editing operations should be limited to simple, texmex style things like remove fullbrites, rotate, flip etc.
 Should be able to paste textures or drag files and have the correct colour conversion and mip-mapping performed
-
-
-
-
-TODO:
-+ get some kind of generic system for reading binary files and structs.
-    (can probably just use datastream.js for this, instead of making my own)
-+ create a system that can extract binary blobs out of existing files and load them as files
-    PAK - contains arbitary files
-    WAD - contains mostly (only) textures
-    BSP - contains a built-in texture directory (same format as .WAD?)
-
-texture formats are inconsistent in Quake
-1. pixels
-2. width, height, pixels
-3. name, width, height, pixels1, pixels2, pixels3, pixels4
-
-1. EXCEPTIONS: pal (256 colors), colormap (128*64), conchars (128x128)
-2. all lmps - colormap.lmp and palette.lmp
-3. all textures - conchars
-
-detect exceptions by name and signature
-pop.lmp (pak1) 256bytes - 16x16
-palette.lmp (pak0, pak2) - palette format
-colormap.lmp (pak0) - ???
-CONCHARS (pak0/gfx.wad) - 128x128
 */
-
-
-
-
-
-
 
 
 // TEST FUNCTIONS
@@ -134,40 +102,6 @@ function app_init() {
 function app_main() {
     var QWT = QuakeWebTools;
 
-    // g_DATA["data/s_explod.spr"] = QWT.FileUtil.getFile("data/s_explod.spr", "arraybuffer", function() {
-    //     var file = g_DATA["data/s_explod.spr"];
-    //     var spr = new QWT.SPR(file.path, file.data);
-    // });
-
-    // g_DATA["data/pak0.pak"] = QWT.FileUtil.getFile("data/pak0.pak", "arraybuffer", function() {
-    //     var file = g_DATA["data/pak0.pak"];
-
-    //     loadPAK(file.path, file.data);
-
-    //     // var pak = new QWT.PAK(file.path, file.data);
-    // });
-    // g_DATA["data/e1m1.bsp"] = QWT.FileUtil.getFile("data/e1m1.bsp", "arraybuffer", function() {
-    //     var file = g_DATA["data/e1m1.bsp"];
-    //     var bsp = new QWT.BSP(file.path, file.data);
-
-    //     QWT.ImageUtil.generateHTMLPreview(bsp.miptex_directory, bsp.ab, QWT.DEFAULT_PALETTE);
-    // });
-   //  g_DATA["data/colormap.lmp"] = QWT.FileUtil.getFile("data/colormap.lmp", "arraybuffer", function() {
-   //      var file = g_DATA["data/colormap.lmp"];
-   //      var lmp = new QWT.LMP(file.path, file.data);
-   //      console.log(lmp.toString());
-
-   //      // test file
-   //      var image_data = QWT.ImageUtil.getImageData(lmp.filename, lmp.ab);
-   //      var img = QWT.ImageUtil.expandImageData(image_data, QWT.DEFAULT_PALETTE);
-   //      document.body.appendChild(img);
-   //  });
-   //  g_DATA["gfx.wad"] = QWT.FileUtil.getFile("data/common.wad", "arraybuffer", function() {
-   //      var file = g_DATA["gfx.wad"];
-   //      var wad = new QWT.WAD(file.path, file.data);
-
-   //      wad.generateHTMLPreview(QWT.DEFAULT_PALETTE);
-   // });
 }
 
 
