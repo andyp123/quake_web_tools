@@ -56,7 +56,7 @@ QuakeWebTools.FileUtil.getFilename = function(path) {
     if (index != -1) {
         return path.substring(index + 1);
     }
-    return "";
+    return path;
 }
 
 /**

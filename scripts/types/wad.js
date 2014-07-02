@@ -113,27 +113,3 @@ QuakeWebTools.WAD.prototype.toString_ListContents = function(verbose, use_br) {
 
     return str;
 }
-
-/**
-* Decode all the images and add them to the current page.
-* @param {PAL} palette - The palette file to use for image decoding.
-*/
-QuakeWebTools.WAD.prototype.generateHTMLPreview = function(palette) {
-    var fragment = new DocumentFragment();
-    var IU = QuakeWebTools.ImageUtil;
-
-    for (var i = 0; i < this.directory.length; ++i) {
-        var entry = this.directory[i];
-        var image_data = IU.getImageData(entry.name, this.ab, entry);
-        var img = IU.expandImageData(image_data, palette);
-            img.title = entry.name + " (" + image_data.width + "x" + image_data.height + ", " + entry.size + " bytes)";
-            img.download = name + ".png";
-        var div = document.createElement("div");
-        div.appendChild(img);
-        div.innerHTML += "<p style=\"position:relative;top:" + -(img.height + 8) + ";left:" + (img.width + 8) + "\">"
-                       + entry.name + "<br>(" + image_data.width + "x" + image_data.height +")<br>" + entry.size + " bytes</p>";
-        fragment.appendChild(div);
-    }
-
-    document.getElementById("main").appendChild(fragment);
-}

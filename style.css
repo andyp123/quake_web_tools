@@ -10,7 +10,25 @@ img {
 
 div {
     border: solid 1px #333333;
-    width:400px;
+    width:100%;
+}
+
+div.filedrop {
+     border: 2px dashed #999999;
+     border-radius: 8px;
+     text-align: center;
+     font-size: 2em;
+     font-weight: bold;
+     color: #999999;
+}
+
+div.filedrop_hover {
+     border: 2px dashed white;
+     border-radius: 8px;
+     text-align: center;
+     font-size: 2em;
+     font-weight: bold;
+     color: white;    
 }
 
 a {

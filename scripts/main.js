@@ -146,13 +146,12 @@ function app_main() {
 
     //     // var pak = new QWT.PAK(file.path, file.data);
     // });
-    g_DATA["data/e1m1.bsp"] = QWT.FileUtil.getFile("data/e1m1.bsp", "arraybuffer", function() {
-        var file = g_DATA["data/e1m1.bsp"];
-        var bsp = new QWT.BSP(file.path, file.data);
+    // g_DATA["data/e1m1.bsp"] = QWT.FileUtil.getFile("data/e1m1.bsp", "arraybuffer", function() {
+    //     var file = g_DATA["data/e1m1.bsp"];
+    //     var bsp = new QWT.BSP(file.path, file.data);
 
-        QWT.ImageUtil.generateHTMLPreview(bsp.miptex_directory, bsp.ab, QWT.DEFAULT_PALETTE);
-        //bsp.generateHTMLPreview(QWT.DEFAULT_PALETTE);
-    });
+    //     QWT.ImageUtil.generateHTMLPreview(bsp.miptex_directory, bsp.ab, QWT.DEFAULT_PALETTE);
+    // });
    //  g_DATA["data/colormap.lmp"] = QWT.FileUtil.getFile("data/colormap.lmp", "arraybuffer", function() {
    //      var file = g_DATA["data/colormap.lmp"];
    //      var lmp = new QWT.LMP(file.path, file.data);

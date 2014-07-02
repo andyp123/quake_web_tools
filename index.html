@@ -6,7 +6,7 @@
         <!--lib-->
         <script type="text/javascript" src="scripts/lib/DataStream.js"></script>
         <!--util-->
-        <script type="text/javascript" src="scripts/util/FileManager"></script>
+        <script type="text/javascript" src="scripts/util/FileManager.js"></script>
         <script type="text/javascript" src="scripts/util/FileUtil.js"></script>
         <script type="text/javascript" src="scripts/util/ImageUtil.js"></script>
         <!--types-->
@@ -23,9 +23,76 @@
 
     <body onload="app_init()">
 
-        <div id="main">
+        <article>
+            <div class="filedrop" id="holder" style="width: 600px; height: 100px"><p>DROP FILES HERE</p></div> 
+            <p id="status">File API & FileReader API not supported</p>
+            <p>Drag Quake file format files into the area above to load their content in your browser.</p>
+        </article>
+
+        <div id="main" style="width: 600px; border:0">
         </div>
 
     </body>
 
 </html>
+
+<script>
+var holder = document.getElementById('holder'),
+    state = document.getElementById('status');
+
+if (typeof window.FileReader === 'undefined') {
+  state.className = 'fail';
+} else {
+    state.parentNode.removeChild(state);
+}
+ 
+holder.ondragover = function () { this.className = 'filedrop_hover'; return false; };
+holder.ondragleave = function () { this.className = 'filedrop'; return false; };
+holder.ondragend = holder.ondragleave;
+holder.ondrop = function (e) {
+  this.className = 'filedrop';
+  e.preventDefault();
+
+  var file = e.dataTransfer.files[0],
+      reader = new FileReader();
+  reader.onload = function (event) {
+    var QWT = QuakeWebTools;
+    var arraybuffer = event.target.result;
+    var filename = file.name;
+    var extension;
+    var dot_index = filename.lastIndexOf(".");
+    if (dot_index != -1) {
+        extension = filename.substring(dot_index + 1).toLowerCase();
+    }
+    
+    switch (extension) {
+    case "pak":
+        loadPAK(filename, arraybuffer);
+        break;
+    case "wad":
+        var wad = new QWT.WAD(filename, arraybuffer);
+        QWT.ImageUtil.generateHTMLPreview(wad.directory, wad.ab, QWT.DEFAULT_PALETTE);    
+        break;
+    case "bsp":
+        var bsp = new QWT.BSP(filename, arraybuffer);
+        QWT.ImageUtil.generateHTMLPreview(bsp.miptex_directory, bsp.ab, QWT.DEFAULT_PALETTE);
+        break;
+    case "spr":
+        var spr = new QWT.SPR(filename, arraybuffer);
+        break;
+    case "lmp":
+        var image_data = QWT.ImageUtil.getImageData(filename, arraybuffer);
+        var img = QWT.ImageUtil.expandImageData(image_data, QWT.DEFAULT_PALETTE);
+        document.body.appendChild(img);
+        break;
+    default:
+        var msg = "File type not supported (" + extension + ")";
+        alert(msg);
+    }
+  };
+
+  reader.readAsArrayBuffer(file);
+
+  return false;
+};
+</script>

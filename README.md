@@ -76,3 +76,18 @@ TODO:
 + Implement a basic 3d view
 
 + View MDL files in the 3d view
+
++ Think about configuration files for auto-loading files from the Quake directory:
+  Quake.exe
+  QuakeWebTools.html < executing from here gets around many access problems :)
+  [QuakeWebTools]
+    [configs]
+      default.txt
+      mymap.txt < config files store lists of files that should be loaded for a particular project
+    [scripts]
+    [img]
+  [ID1]
+    pak0.pak
+    pak1.pak
+    [maps]
+  [WADS]
