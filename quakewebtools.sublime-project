@@ -2,9 +2,14 @@
   "folders":
   [
     {
+      "folder_exclude_patterns":
+      [
+        "data_test",
+        "scripts/[unused]"
+      ],
       "follow_symlinks": true,
       "path": "."
-    }
+    },
   ],
   "settings":
   {
