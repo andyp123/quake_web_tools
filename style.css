@@ -13,22 +13,22 @@ div {
     width:100%;
 }
 
-div.filedrop {
-     border: 2px dashed #555;
-     border-radius: 8px;
-     text-align: center;
-     font-size: 2em;
-     font-weight: bold;
-     color: #555;
+.filedrop {
+    border: 2px dashed #555;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 2em;
+    font-weight: bold;
+    color: #555;
 }
 
-div.filedrop_hover {
-     border: 2px dashed white;
-     border-radius: 8px;
-     text-align: center;
-     font-size: 2em;
-     font-weight: bold;
-     color: white;    
+.filedrop_hover {
+    border: 2px dashed white;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 2em;
+    font-weight: bold;
+    color: white;    
 }
 
 a {
