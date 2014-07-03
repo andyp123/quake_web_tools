@@ -8,11 +8,6 @@ body {
 img {
 }
 
-div {
-    border: solid 1px #555;
-    width:100%;
-}
-
 .filedrop {
     border: 2px dashed #555;
     border-radius: 8px;
@@ -22,13 +17,32 @@ div {
     color: #555;
 }
 
-.filedrop_hover {
+.filedrop-hover {
     border: 2px dashed white;
     border-radius: 8px;
     text-align: center;
     font-size: 2em;
     font-weight: bold;
     color: white;    
+}
+
+.item-box {
+    width: 100%;
+    border: 0;
+    padding: 4px;
+}
+
+.item-name {
+    color: #999;
+}
+
+.item-info {
+    color: #555;
+}
+
+.item-divider {
+    border: 0;
+    border-bottom: 1px dashed #555;
 }
 
 a {

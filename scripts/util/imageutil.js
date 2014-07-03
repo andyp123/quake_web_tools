@@ -183,23 +183,30 @@ QuakeWebTools.ImageUtil.expandImageData = function(image_data, palette, mip_leve
 /**
 *
 */
-QuakeWebTools.ImageUtil.generateHTMLPreview = function(image_directory, arraybuffer, palette) {
+QuakeWebTools.ImageUtil.generateHTMLPreview = function(image_directory, arraybuffer, palette, element_id) {
     var fragment = new DocumentFragment();
     var IU = QuakeWebTools.ImageUtil;
 
     for (var i = 0; i < image_directory.length; ++i) {
         var entry = image_directory[i];
         var image_data = IU.getImageData(entry.name, arraybuffer, entry);
+        var img_info = " (" + image_data.width + "x" + image_data.height + ", " + entry.size + " bytes)";
         var img = IU.expandImageData(image_data, palette);
-            img.title = entry.name + " (" + image_data.width + "x" + image_data.height + ", " + entry.size + " bytes)";
+            img.title = entry.name + img_info;
             img.download = name + ".png";
+
         var div = document.createElement("div");
+            div.className = "item-box";
         div.appendChild(img);
-        div.innerHTML += "<p style=\"position:relative;top:" + -(img.height + 8) + ";left:" + (img.width + 8) + "\">"
-                       + entry.name + "<br>(" + image_data.width + "x" + image_data.height +")<br>" + entry.size + " bytes</p>";
+        div.innerHTML += "<br><span class='item-name'>" + entry.name + "</span><span class='item-info'>" + img_info + "</span><hr class='item-divider'>";
         fragment.appendChild(div);
     }
 
-    document.getElementById("main").appendChild(fragment);
+    var element = document.getElementById(element_id);
+    if (element) {
+        element.appendChild(fragment);
+    } else {
+        document.body.appendChild(fragment);
+    }
 }
 
