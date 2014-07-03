@@ -1,10 +1,4 @@
-/**
-* Quake Web Tools Application.
-*
-* @module QuakeWebTools
-*/
 var QuakeWebTools = QuakeWebTools || {};
-
 
 /**
 * PAK file representation.
@@ -13,46 +7,46 @@ var QuakeWebTools = QuakeWebTools || {};
 * @param {ArrayBuffer} arraybuffer - The file data as an ArrayBuffer.
 */
 QuakeWebTools.PAK = function(path, arraybuffer) {
-    this.filename = QuakeWebTools.FileUtil.getFilename(path);
-    this.ab = arraybuffer;
+  this.filename = QuakeWebTools.FileUtil.getFilename(path);
+  this.ab = arraybuffer;
 
-    this.header = null;
-    this.directory = null;
+  this.header = null;
+  this.directory = null;
 
-    this.init();
+  this.init();
 }
 
 QuakeWebTools.PAK.HEADER_T = [
-    "pak_id",       "string:4", // "PACK"
-    "dir_offset",   "int32",
-    "dir_size",     "int32"
+  "pak_id",       "string:4", // "PACK"
+  "dir_offset",   "int32",
+  "dir_size",     "int32"
 ];
 
 QuakeWebTools.PAK.ENTRY_T = [
-    "path",         "string:56",
-    "offset",       "int32",
-    "size",         "int32"
+  "path",         "string:56",
+  "offset",       "int32",
+  "size",         "int32"
 ];
 
 /**
 * Initialize the PAK.
 */
 QuakeWebTools.PAK.prototype.init = function() {
-    var ds = new DataStream(this.ab, 0, DataStream.LITTLE_ENDIAN);
+  var ds = new DataStream(this.ab, 0, DataStream.LITTLE_ENDIAN);
 
-    this.header = ds.readStruct(QuakeWebTools.PAK.HEADER_T);
-    this.header.dir_entries = this.header.dir_size / 64; // size of ENTRY_T is 64 bytes
+  this.header = ds.readStruct(QuakeWebTools.PAK.HEADER_T);
+  this.header.dir_entries = this.header.dir_size / 64; // size of ENTRY_T is 64 bytes
 
-    var trim = QuakeWebTools.FileUtil.trimNullTerminatedString;
-    var directory = [];
-    var ENTRY_T = QuakeWebTools.PAK.ENTRY_T;
-    ds.seek(this.header.dir_offset);
-    for (var i = 0; i < this.header.dir_entries; ++i) {
-        var entry = ds.readStruct(ENTRY_T);
-        entry.path = trim(entry.path); // must trim the string because DataStream.js leaves it 0 padded
-        directory[i] = entry;
-    }
-    this.directory = directory;
+  var trim = QuakeWebTools.FileUtil.trimNullTerminatedString;
+  var directory = [];
+  var ENTRY_T = QuakeWebTools.PAK.ENTRY_T;
+  ds.seek(this.header.dir_offset);
+  for (var i = 0; i < this.header.dir_entries; ++i) {
+    var entry = ds.readStruct(ENTRY_T);
+    entry.path = trim(entry.path); // must trim the string because DataStream.js leaves it 0 padded
+    directory[i] = entry;
+  }
+  this.directory = directory;
 }
 
 /**
@@ -61,14 +55,14 @@ QuakeWebTools.PAK.prototype.init = function() {
 * @return {PAKEntry} The file entry or null if not found.
 */
 QuakeWebTools.PAK.prototype.findEntryByPath = function(path) {
-    for (var i = 0; i < this.directory.length; ++i) {
-        var entry = this.directory[i];
-        if (path == entry.path) {
-            return entry;
-        }
+  for (var i = 0; i < this.directory.length; ++i) {
+    var entry = this.directory[i];
+    if (path == entry.path) {
+      return entry;
     }
+  }
 
-    return null;
+  return null;
 }
 
 /**
@@ -77,38 +71,38 @@ QuakeWebTools.PAK.prototype.findEntryByPath = function(path) {
 * @return {ArrayBuffer} The file data.
 */
 QuakeWebTools.PAK.prototype.getEntryData = function(entry) {
-    return this.ab.slice(entry.offset, entry.offset + entry.size);
+  return this.ab.slice(entry.offset, entry.offset + entry.size);
 }
 
 QuakeWebTools.PAK.prototype.saveEntryAsFile = function(entry) {
-    var file_data = this.getEntryData(entry);
-    var file_blob = new Blob([file_data]);
-    var filename = entry.path;
-    var path_separator = filename.lastIndexOf("/");
-    if (path_separator != -1) {
-        filename = filename.substring(path_separator + 1);
-    }
-    var a = document.createElement("a");
-        a.download = filename;
-        a.href = window.URL.createObjectURL(file_blob);
-    a.click();
+  var file_data = this.getEntryData(entry);
+  var file_blob = new Blob([file_data]);
+  var filename = entry.path;
+  var path_separator = filename.lastIndexOf("/");
+  if (path_separator != -1) {
+    filename = filename.substring(path_separator + 1);
+  }
+  var a = document.createElement("a");
+  a.download = filename;
+  a.href = window.URL.createObjectURL(file_blob);
+  a.click();
 }
 
 QuakeWebTools.PAK.prototype.getDownloadLink = function(entry) {
-    var a = document.createElement("a");
-        a.href = "#" + entry.path;
-        a.innerHTML = entry.path;// + " (" + entry.size + " bytes)";
-        var that = this;
-        a.onclick = (function() { that.saveEntryAsFile(entry); });
-    return a;
+  var that = this;
+  var a = document.createElement("a");
+  a.href = "#" + entry.path;
+  a.innerHTML = entry.path;// + " (" + entry.size + " bytes)";
+  a.onclick = (function() { that.saveEntryAsFile(entry); });
+  return a;
 }
 
 /**
 * Get a String representing the basic file information.
 */
 QuakeWebTools.PAK.prototype.toString = function() {
-    var str = "PAK: '" + this.filename + "' " + this.header.pak_id + " (" + this.header.dir_entries + ")";
-    return str;
+  var str = "PAK: '" + this.filename + "' " + this.header.pak_id + " (" + this.header.dir_entries + ")";
+  return str;
 }
 
 /**
@@ -118,18 +112,17 @@ QuakeWebTools.PAK.prototype.toString = function() {
 * @return {String} A String of the directory content
 */
 QuakeWebTools.PAK.prototype.toString_ListContents = function(verbose, use_br) {
-    var str = "";
-    var newline = (use_br) ? "<br>" : "\n";
+  var str = "";
+  var newline = (use_br) ? "<br>" : "\n";
 
-    for (var i = 0; i < this.directory.length; ++i) {
-        var entry = this.directory[i];
-        str += i + ": " + entry.path;
-        if (verbose) {
-            str += " (offset=" + entry.offset
-                 + ", size=" + entry.size + ")";
-        }
-        str += newline;
+  for (var i = 0; i < this.directory.length; ++i) {
+    var entry = this.directory[i];
+    str += i + ": " + entry.path;
+    if (verbose) {
+      str += " (offset=" + entry.offset +  ", size=" + entry.size + ")";
     }
+    str += newline;
+  }
 
-    return str;
+  return str;
 }

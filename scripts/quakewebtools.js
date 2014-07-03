@@ -1,8 +1,14 @@
+/**
+* Quake Web Tools Application.
+*
+* @module QuakeWebTools
+*/
+var QuakeWebTools = QuakeWebTools || {};
+
 /*
 TODO:
 
 LARGE TASKS
-+ datastream.js style wrapper for array buffer reading (or just use datastream.js ;) )
 + file manager class for dealing with files more cleanly
 + animated image support
 + support for sprite frames in image loader
@@ -82,46 +88,45 @@ Should be able to paste textures or drag files and have the correct colour conve
 // TEST FUNCTIONS
 
 // table to store files (path as table key)
-var g_DATA = {};
+QuakeWebTools.DATA = {};
 
 function app_init() {
-    console.log("starting app...");
+  console.log("starting app...");
 
-    var QWT = QuakeWebTools;
+  var QWT = QuakeWebTools;
 
-    // load default palette before continuing (should have an embedded version...)
-    g_DATA["data/quake.pal"] = QWT.FileUtil.getFile("data/quake.pal", "arraybuffer", function() {
-        var file = g_DATA["data/quake.pal"];
-        var pal = new QWT.PAL(file.path, file.data);
+  // load default palette before continuing (should have an embedded version...)
+  QWT.DATA["data/quake.pal"] = QWT.FileUtil.getFile("data/quake.pal", "arraybuffer", function() {
+    var file = QWT.DATA["data/quake.pal"];
+    var pal = new QWT.PAL(file.path, file.data);
+    QWT.DEFAULT_PALETTE = pal;
 
-        QWT.DEFAULT_PALETTE = pal;
-        app_main();
-    });
+    app_main();
+  });
 }
 
 function app_main() {
-    var QWT = QuakeWebTools;
-
+  var QWT = QuakeWebTools;
 }
 
 
 function loadPAK(path, arraybuffer) {
-    var pak = new QuakeWebTools.PAK(path, arraybuffer);
-    var header = pak.header;
-    var directory = pak.directory;
+  var pak = new QuakeWebTools.PAK(path, arraybuffer);
+  var header = pak.header;
+  var directory = pak.directory;
 
-    console.log(pak.toString());
+  console.log(pak.toString());
 
-    var div_main = document.getElementById("main");
-    
-    // create div of links to files in the pak
-    var ul = document.createElement("ol");
-    for (var j = 0; j < directory.length; ++j) {
-            var li = document.createElement("li");
-            var a = pak.getDownloadLink(directory[j]);
-            li.appendChild(a);
-            ul.appendChild(li);
-    }
+  var div_content = document.getElementById("file-content");
+  
+  // create div of links to files in the pak
+  var ul = document.createElement("ol");
+  for (var j = 0; j < directory.length; ++j) {
+    var li = document.createElement("li");
+    var a = pak.getDownloadLink(directory[j]);
+    li.appendChild(a);
+    ul.appendChild(li);
+  }
 
-    div_main.appendChild(ul);
+  div_content.appendChild(ul);
 }

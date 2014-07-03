@@ -1,11 +1,4 @@
-/**
-* Quake Web Tools Application.
-*
-* @module QuakeWebTools
-*/
 var QuakeWebTools = QuakeWebTools || {};
-
-
 
 /**
 * Library to simplify dealing with files
@@ -21,15 +14,15 @@ QuakeWebTools.FileUtil = {};
 * @static
 */
 QuakeWebTools.FileUtil.getString = function(dataview, offset, length) {
-    var str = "";
+  var str = "";
 
-    for (var i = 0; i < length; ++i) {
-        var charcode = dataview.getUint8(offset + i);
-        if (charcode == 0) break;
-        str += String.fromCharCode(charcode);
-    }
+  for (var i = 0; i < length; ++i) {
+    var charcode = dataview.getUint8(offset + i);
+    if (charcode == 0) break;
+    str += String.fromCharCode(charcode);
+  }
 
-    return str;
+  return str;
 }
 
 /**
@@ -37,12 +30,12 @@ QuakeWebTools.FileUtil.getString = function(dataview, offset, length) {
 * @static
 */
 QuakeWebTools.FileUtil.trimNullTerminatedString = function(str) {
-    for (var i in str) {
-        if (str.charCodeAt(i) == 0) {
-            return str.substring(0, i);
-        }
+  for (var i in str) {
+    if (str.charCodeAt(i) == 0) {
+      return str.substring(0, i);
     }
-    return str;
+  }
+  return str;
 }
 
 /**
@@ -51,12 +44,12 @@ QuakeWebTools.FileUtil.trimNullTerminatedString = function(str) {
 * @static
 */
 QuakeWebTools.FileUtil.getFilename = function(path) {
-    var index = path.lastIndexOf("/");
+  var index = path.lastIndexOf("/");
 
-    if (index != -1) {
-        return path.substring(index + 1);
-    }
-    return path;
+  if (index != -1) {
+    return path.substring(index + 1);
+  }
+  return path;
 }
 
 /**
@@ -65,14 +58,14 @@ QuakeWebTools.FileUtil.getFilename = function(path) {
 * @static
 */
 QuakeWebTools.FileUtil.getDirectory = function(path) {
-    var index = path.lastIndexOf(".");
-        
-    if (index != -1) {
-        index = path.lastIndexOf("/");
-        return (index != -1) ? path.substring(0, index + 1) : "";
-    }
+  var index = path.lastIndexOf(".");
+      
+  if (index != -1) {
+    index = path.lastIndexOf("/");
+    return (index != -1) ? path.substring(0, index + 1) : "";
+  }
 
-    return path;
+  return path;
 }
 
 /**
@@ -83,46 +76,46 @@ QuakeWebTools.FileUtil.getDirectory = function(path) {
 * @static
 */
 QuakeWebTools.FileUtil.getDirectoryFilenameExtension = function(path) {
-    var rv = {path: "", filename:"", extension:""};    
-    var index_dot = path.lastIndexOf(".");
-    var index_slash = path.lastIndexOf("/");
+  var rv = {path: "", filename:"", extension:""};    
+  var index_dot = path.lastIndexOf(".");
+  var index_slash = path.lastIndexOf("/");
 
-    if (index_dot != -1) {
-        rv.extension = path.substring(index_dot + 1);
-        path = path.substring(0, index_dot);
-        if (index_slash != -1) {
-            rv.filename = path.substring(index_slash + 1);
-            rv.path = path.substring(0, index_slash + 1);
-        } else {
-            rv.filename = path;
-        }
+  if (index_dot != -1) {
+    rv.extension = path.substring(index_dot + 1);
+    path = path.substring(0, index_dot);
+    if (index_slash != -1) {
+      rv.filename = path.substring(index_slash + 1);
+      rv.path = path.substring(0, index_slash + 1);
     } else {
-        rv.path = path;
+      rv.filename = path;
     }
+  } else {
+    rv.path = path;
+  }
 
-    return rv;
+  return rv;
 }
 
 /**
 * Simple file loading helper.
 */
 QuakeWebTools.FileUtil.getFile = function(path, responseType, callback) {
-    var result = {
-        path: path,
-        data: undefined,
-        status: "queued"
-    };
+  var result = {
+    path: path,
+    data: undefined,
+    status: "queued"
+  };
 
-    var req = new XMLHttpRequest();
-    req.open("GET", path, true);
-    req.responseType = responseType;
-    req.onload = function(e) {
-        result.data = req.response;
-        result.status = "loaded";
-        console.log("loaded: " + path);
-        callback();
-    };
-    req.send(); // async
+  var req = new XMLHttpRequest();
+  req.open("GET", path, true);
+  req.responseType = responseType;
+  req.onload = function(e) {
+    result.data = req.response;
+    result.status = "loaded";
+    console.log("loaded: " + path);
+    callback();
+  };
+  req.send(); // async
 
-    return result;
+  return result;
 }
