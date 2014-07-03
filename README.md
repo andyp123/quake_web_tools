@@ -3,13 +3,13 @@
 Tools for viewing Quake 1 file formats on the web.
 
 See this page for more information about types:  
-[http://www.gamers.org/dEngine/quake/spec/quake-spec32.html]
+http://www.gamers.org/dEngine/quake/spec/quake-spec32.html
 
 ---
 
 ###LIST OF TYPES:
 
-+ .WAV Sound files (RIFF/WAVE)
++ .WAV    Sound files (RIFF/WAVE)
 + .BSP    Levels (map and textures)  
 + .MDL    3D models (Alias)  
 + .SPR    Sprite models  
@@ -66,17 +66,17 @@ See this page for more information about types:
 + View MDL files in the 3d view
 + Think about configuration files for auto-loading files from the Quake directory:  
 
-  [Quake]
+<pre><code>[Quake]
     Quake.exe
-    QuakeWebTools.html < executing from here gets around many access problems
+    QuakeWebTools.html - executing from here gets around many access problems
     [QuakeWebTools]
         [configs]
             default.txt
-            mymap.txt < config files store lists of files that should be loaded for a particular project
+            mymap.txt - config files store files to load for a project
         [scripts]
         [img]
     [ID1]
         pak0.pak
         pak1.pak
         [maps]
-    [WADS]
+    [WADS]</code></pre>
