@@ -90,11 +90,30 @@ Should be able to paste textures or drag files and have the correct colour conve
 // table to store files (path as table key)
 QuakeWebTools.DATA = {};
 
+/**
+* An object to contain globals.
+*/
+QuakeWebTools.GLOBAL = {
+  "FILEMANAGER": null,
+};
+
 function app_init() {
-  console.log("starting app...");
+  console.log("app_init...");
 
   var QWT = QuakeWebTools;
+  var G = QWT.GLOBAL;
 
+  G.FILEMANAGER = new QuakeWebTools.FileManager();
+
+  var pal_file = "data/quake.pal";
+  G.FILEMANAGER.queueFile(pal_file, [function() {
+      QWT.DEFAULT_PALETTE = G.FILEMANAGER.getFile(pal_file, "obj");
+      app_main();
+    }]);
+
+  G.FILEMANAGER.loadAllQueued();
+
+/*
   // load default palette before continuing (should have an embedded version...)
   QWT.DATA["data/quake.pal"] = QWT.FileUtil.getFile("data/quake.pal", "arraybuffer", function() {
     var file = QWT.DATA["data/quake.pal"];
@@ -102,11 +121,14 @@ function app_init() {
     QWT.DEFAULT_PALETTE = pal;
 
     app_main();
-  });
+  });*/
 }
 
 function app_main() {
+  console.log("app_main...");
+
   var QWT = QuakeWebTools;
+
 }
 
 

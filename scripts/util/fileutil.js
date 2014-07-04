@@ -6,6 +6,32 @@ var QuakeWebTools = QuakeWebTools || {};
 */
 QuakeWebTools.FileUtil = {};
 
+/** 
+* Get the constructor for a file type object from its associated extension.
+* @param {String} type File type.
+* @return {function} A constructor function or null 
+*/
+QuakeWebTools.FileUtil.getFileObject = function(type, path, arraybuffer) {
+  var FU = QuakeWebTools.FileUtil;
+  FU.NATIVE_TYPES = FU.NATIVE_TYPES || {
+    "pak": QuakeWebTools.PAK,
+    "wad": QuakeWebTools.WAD,
+    "bsp": QuakeWebTools.BSP,
+    "lmp": QuakeWebTools.LMP,
+    "spr": QuakeWebTools.SPR,
+    "pal": QuakeWebTools.PAL,
+    //"mdl": QuakeWebTools.MDL,
+    //"map": QuakeWebTools.MAP,
+  };
+
+  var constructor = FU.NATIVE_TYPES[type];
+  if (constructor !== undefined) {
+    return new constructor(path, arraybuffer);
+  }
+
+  return null;
+};
+
 /**
 * Read a null-terminated string of maximum length from a dataview
 * @param {DataView} dataview - The DataView (or ArrayBuffer) to read characters from.
@@ -39,8 +65,9 @@ QuakeWebTools.FileUtil.trimNullTerminatedString = function(str) {
 }
 
 /**
-* Returns just the filename component of a path.
-* @param {String} path - A file path.
+* Get just the filename component of a path.
+* @param {String} path File path.
+* @return {String} The filename. This assumes there might be no extension.
 * @static
 */
 QuakeWebTools.FileUtil.getFilename = function(path) {
@@ -53,8 +80,9 @@ QuakeWebTools.FileUtil.getFilename = function(path) {
 }
 
 /**
-* Returns just the directory component of a path.
-* @param {String} path - A file path.
+* Get just the directory component of a path.
+* @param {String} path File path.
+* @return {String} The directory or "" if there is none.
 * @static
 */
 QuakeWebTools.FileUtil.getDirectory = function(path) {
@@ -64,10 +92,25 @@ QuakeWebTools.FileUtil.getDirectory = function(path) {
     index = path.lastIndexOf("/");
     return (index != -1) ? path.substring(0, index + 1) : "";
   }
-
   return path;
 }
 
+/**
+* Get just the file extension from a path.
+* @param {String} path File path.
+* @return {String} The file extension or "" if there is none.
+* @static
+*/
+QuakeWebTools.FileUtil.getExtension = function(path) {
+  var index = path.lastIndexOf(".");
+
+  if (index != -1) {
+    return path.substring(index + 1).toLowerCase(); // for comparisons
+  }
+  return "";
+}
+
+// TODO: remove this function?
 /**
 * Splits a string containing a path, filename and extension into components. Components
 * not present in the path will be left as empty strings.

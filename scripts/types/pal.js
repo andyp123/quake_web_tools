@@ -20,7 +20,7 @@ QuakeWebTools.PAL.FULLBRITE_INDEX = 240;
 * Get a String representing the basic file information.
 */
 QuakeWebTools.PAL.prototype.toString = function() {
-  var str = "PAL: '" + this.filename + "' RGB (256)";
+  var str = "PAL: '" + this.filename + "'";
   return str;
 }
 

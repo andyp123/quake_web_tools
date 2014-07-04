@@ -65,30 +65,28 @@ holder.ondrop = function (e) {
   var reader = new FileReader();
   reader.onload = function (event) {
     var QWT = QuakeWebTools;
-    var arraybuffer = event.target.result;
-    var filename = file.name;
-    var extension;
-    var dot_index = filename.lastIndexOf(".");
-    if (dot_index != -1) {
-      extension = filename.substring(dot_index + 1).toLowerCase();
-    }
+    var G = QWT.GLOBAL;
+
+    var file_entry = G.FILEMANAGER.addFile(file.name, event.target.result);
+    var filename = file_entry.path;
+    var arraybuffer = file_entry.data;
 
     document.getElementById("file-content").innerHTML = "";
     
-    switch (extension) {
+    switch (file_entry.type) {
     case "pak":
       loadPAK(filename, arraybuffer);
       break;
     case "wad":
-      var wad = new QWT.WAD(filename, arraybuffer);
+      var wad = file_entry.obj;//new QWT.WAD(filename, arraybuffer);
       QWT.ImageUtil.generateHTMLPreview(wad.directory, wad.ab, QWT.DEFAULT_PALETTE, "file-content");    
       break;
     case "bsp":
-      var bsp = new QWT.BSP(filename, arraybuffer);
+      var bsp = file_entry.obj;//new QWT.BSP(filename, arraybuffer);
       QWT.ImageUtil.generateHTMLPreview(bsp.miptex_directory, bsp.ab, QWT.DEFAULT_PALETTE, "file-content");
       break;
     case "spr":
-      var spr = new QWT.SPR(filename, arraybuffer);
+      var spr = file_entry.obj;//new QWT.SPR(filename, arraybuffer);
       break;
     case "lmp":
       var image_data = QWT.ImageUtil.getImageData(filename, arraybuffer);
@@ -101,7 +99,7 @@ holder.ondrop = function (e) {
       document.getElementById("file-content").appendChild(img);
       break;
     default:
-      var msg = "File type not supported (" + extension + ")";
+      var msg = "File type not supported (" + file_entry.type + ")";
       alert(msg);
     }
   };
