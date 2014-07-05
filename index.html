@@ -19,6 +19,7 @@
     <script src="scripts/types/lmp.js"></script>
     <script src="scripts/types/spr.js"></script>
     <script src="scripts/types/bsp.js"></script>
+    <script src="scripts/types/mdl.js"></script>
     <!--application-->
     <script src="scripts/quakewebtools.js"></script>
   </head>
@@ -97,6 +98,8 @@ holder.ondrop = function (e) {
       var image_data = QWT.ImageUtil.getImageData(filename, arraybuffer);
       var img = QWT.ImageUtil.expandImageData(image_data);
       document.getElementById("file-content").appendChild(img);
+      break;
+    case "mdl":
       break;
     default:
       var msg = "File type not supported (" + file_entry.type + ")";

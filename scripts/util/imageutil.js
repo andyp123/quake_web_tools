@@ -21,6 +21,16 @@ QuakeWebTools.ImageUtil.SPECIAL_CASE = {
   "colormap.lmp": {size: 16385, width: 256, height: 64, header_type: QuakeWebTools.ImageUtil.HEADER_NONE}
 };
 
+QuakeWebTools.ImageUtil.newImageData = function(name, width, height) {
+  return {
+    name: name || "",
+    width: width || 0,
+    height: height || 0,
+    pixels: null,
+    pixel_type: QuakeWebTools.ImageUtil.PIXELTYPE_PALETISED,
+  };
+};
+
 /**
 * Gets image data in the form { name, width, height, pixels, pixel_type }
 * where pixels is an arraybuffer containing paletised image data.
@@ -40,13 +50,7 @@ QuakeWebTools.ImageUtil.getImageData = function(name, arraybuffer, entry) {
   var header_type = IU.HEADER_SIMPLE;
 
   // basic image data structure
-  var image_data = {
-    name: name,
-    width: 0,
-    height: 0,
-    pixels: null,
-    pixel_type: IU.PIXELTYPE_PALETISED
-  };
+  var image_data = IU.newImageData(name);
 
   // define simple entry for dealing seemlessly with single files (TYPE_STATUS is same format as HEADER_SIMPLE)
   entry = (!entry) ? { offset: 0, size: arraybuffer.byteLength, type: WAD.TYPE_STATUS} : entry;

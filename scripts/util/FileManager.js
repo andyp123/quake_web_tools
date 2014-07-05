@@ -45,7 +45,7 @@ QuakeWebTools.FileManager.STATUS = {
 // Callback form [ <function>, <this_object>, [args] ]
 // <function> is the only required component
 /** @static */
-QuakeWebTools.FileManager.makeQueueEntry = function(path, callback) {
+QuakeWebTools.FileManager.newQueueEntry = function(path, callback) {
   var entry = {
     status: QuakeWebTools.FileManager.STATUS.QUEUED,
     path: path,
@@ -62,7 +62,7 @@ QuakeWebTools.FileManager.makeQueueEntry = function(path, callback) {
 }
 
 /** @static */
-QuakeWebTools.FileManager.makeFileEntry = function(path, arraybuffer) {
+QuakeWebTools.FileManager.newFileEntry = function(path, arraybuffer) {
   var entry = {
     path: path,
     data: arraybuffer,
@@ -123,7 +123,7 @@ QuakeWebTools.FileManager.prototype.addFile = function(path, arraybuffer) {
 * Internal function that does the work of addFile without checking duplicates.
 */
 QuakeWebTools.FileManager.prototype._addFile = function(path, arraybuffer) {
-  var file_entry = QuakeWebTools.FileManager.makeFileEntry(path, arraybuffer);
+  var file_entry = QuakeWebTools.FileManager.newFileEntry(path, arraybuffer);
   this.file_directory[path] = file_entry;
   console.log("LOAD_OK: '" + path + "' (" + arraybuffer.byteLength + " bytes)" 
       + ((file_entry.obj) ? (" > " + file_entry.obj.toString()) : ""));  
@@ -148,7 +148,7 @@ QuakeWebTools.FileManager.prototype.queueFile = function(path, callback) {
     return 0;
   }
 
-  var entry = FM.makeQueueEntry(path, callback);
+  var entry = FM.newQueueEntry(path, callback);
   this.file_queue[path] = entry;
   console.log("QUEUED: '" + path + "'");
 

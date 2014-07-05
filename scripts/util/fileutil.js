@@ -20,7 +20,7 @@ QuakeWebTools.FileUtil.getFileObject = function(type, path, arraybuffer) {
     "lmp": QuakeWebTools.LMP,
     "spr": QuakeWebTools.SPR,
     "pal": QuakeWebTools.PAL,
-    //"mdl": QuakeWebTools.MDL,
+    "mdl": QuakeWebTools.MDL,
     //"map": QuakeWebTools.MAP,
   };
 
@@ -76,6 +76,26 @@ QuakeWebTools.FileUtil.getFilename = function(path) {
   if (index != -1) {
     return path.substring(index + 1);
   }
+  return path;
+}
+
+/**
+* Get only the filename. No extension or directory.
+* @param {String} path File path.
+* @return {String} The filename.
+* @static 
+*/
+QuakeWebTools.FileUtil.getFilenameNoExtension = function(path) {
+  var index = path.lastIndexOf(".");
+  if (index != -1) {
+    path = path.substring(0, index);
+  }
+
+  index = path.lastIndexOf("/");
+  if (index != -1) {
+    path = path.substring(index + 1);
+  }
+
   return path;
 }
 
