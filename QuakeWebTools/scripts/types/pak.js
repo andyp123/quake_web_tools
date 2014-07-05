@@ -97,6 +97,26 @@ QuakeWebTools.PAK.prototype.getDownloadLink = function(entry) {
   return a;
 }
 
+QuakeWebTools.PAK.prototype.generateFileLinks = function(element_id) {
+  var directory = this.directory;
+
+  // create div of links to files in the pak
+  var ul = document.createElement("ol");
+  for (var j = 0; j < directory.length; ++j) {
+    var li = document.createElement("li");
+    var a = this.getDownloadLink(directory[j]);
+    li.appendChild(a);
+    ul.appendChild(li);
+  }
+
+  var element = document.getElementById(element_id);
+  if (element) {
+    element.appendChild(ul);
+  } else {
+    document.body.appendChild(ul);
+  }
+}
+
 /**
 * Get a String representing the basic file information.
 */

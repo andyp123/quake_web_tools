@@ -1,0 +1,15 @@
+{
+  "name": "quoth",
+  "fgd": "QuakeWebTools/fgd/quoth.fgd",
+  "files":
+  [
+    "id1/pak0.pak",
+    "id1/pak0.pak",
+    "quoth/pak0.pak",
+    "quoth/pak1.pak",
+    "quoth/pak2.pak",
+
+    "_WADS/common.wad",
+    "_WADS/quoth.wad"
+  ]
+}

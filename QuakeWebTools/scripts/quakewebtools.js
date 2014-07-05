@@ -8,6 +8,11 @@ var QuakeWebTools = QuakeWebTools || {};
 /*
 TODO:
 
+Start building polymer/web components:
+MDL viewer
+WAD viewer
+File tree
+
 LARGE TASKS
 + file manager class for dealing with files more cleanly
 + animated image support
@@ -85,16 +90,20 @@ Should be able to paste textures or drag files and have the correct colour conve
 */
 
 
-// TEST FUNCTIONS
-
-// table to store files (path as table key)
-QuakeWebTools.DATA = {};
-
 /**
-* An object to contain globals.
+* Globals objects.
 */
 QuakeWebTools.GLOBAL = {
   "FILEMANAGER": null,
+};
+
+/**
+* Important application paths.
+*/
+QuakeWebTools.PATH = {
+  BASE: "QuakeWebTools/",
+  DATA: "QuakeWebTools/data/",
+  CFG: "QuakeWebTools/config/"
 };
 
 function app_init() {
@@ -102,32 +111,45 @@ function app_init() {
 
   var QWT = QuakeWebTools;
   var G = QWT.GLOBAL;
+  var PATH = QWT.PATH;
 
   G.FILEMANAGER = new QuakeWebTools.FileManager();
 
-  var pal_file = "data/quake.pal";
+  var pal_file = PATH.DATA + "quake.pal";
   G.FILEMANAGER.queueFile(pal_file, [function() {
       QWT.DEFAULT_PALETTE = G.FILEMANAGER.getFile(pal_file, "obj");
       app_main();
     }]);
 
+  var files = [
+    "id1/pak0.pak",
+    "id1/pak1.pak",
+  ];
+  G.FILEMANAGER.queueFiles(files, [function() {
+      console.log("GROUP 1 LOADED");
+    }]);
+  var files = [
+    "quoth/pak0.pak",
+    "quoth/pak1.pak",
+    "quoth/pak2.pak"
+  ];
+  G.FILEMANAGER.queueFiles(files, [function() {
+      console.log("GROUP 2 LOADED");
+    }]);
+
   G.FILEMANAGER.loadAllQueued();
-
-/*
-  // load default palette before continuing (should have an embedded version...)
-  QWT.DATA["data/quake.pal"] = QWT.FileUtil.getFile("data/quake.pal", "arraybuffer", function() {
-    var file = QWT.DATA["data/quake.pal"];
-    var pal = new QWT.PAL(file.path, file.data);
-    QWT.DEFAULT_PALETTE = pal;
-
-    app_main();
-  });*/
 }
 
 function app_main() {
   console.log("app_main...");
 
   var QWT = QuakeWebTools;
+  var G = QuakeWebTools.GLOBAL;
+
+  var pak =  G.FILEMANAGER.getFile("id1/pak0.pak", "obj");
+  if (pak) {
+    pak.generateFileLinks("file-content");
+  }
 
 }
 

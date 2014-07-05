@@ -1,0 +1,26 @@
+{
+  "name": "My Awesome Episode",
+  "game-config": "quoth.txt",
+  "files":
+  [
+
+    "_WADS/myep.wad",
+    "myep/pak0.pak",
+
+    "_MAPS/myep_1.map",
+    "_MAPS/myep_2.map",
+  ],
+  "build_settings":
+  {
+    "onlyents":
+    {
+      "bsp": "-onlyents"
+    }
+    "full":
+    {
+      "bsp": "-transwater",
+      "vis": "-level 4",
+      "light": ""
+    }
+  }
+}
