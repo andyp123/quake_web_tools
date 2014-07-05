@@ -2,18 +2,25 @@ var QuakeWebTools = QuakeWebTools || {};
 
 /*
 TODO:
-+ add local file upload support
-+ store files in the filemanager (path, arraybuffer, loaded file in typed
++ [DONE] add local file upload support
++ [DONE] store files in the filemanager (path, arraybuffer, loaded file in typed
   container)
-+ allow downloading files
-+ allow load/unload operations? (leak prone?)
-+ drag and drop file support (dropzone.js? etc.)
++ allow downloading files from url?
 
 Queue files
 Load queued files
 
 html5 drag and drop for files
-html5 upload files with button
+html5 upload files with button (click on dropzone to do this perhaps?)
+
+Should dropping files onto an element/dropzone be done via functions built into
+FileManager?
+
+Think about file path more:
+ID1/pak0.pak
+quoth/pak0.pak
+currently works fine. However, drag+dropped files only have a filename. Could
+compare byte size of files with duplicate names to see if they are the same.
 
 */
 
