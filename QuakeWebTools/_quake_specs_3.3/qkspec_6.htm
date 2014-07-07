@@ -1,0 +1,128 @@
+<HTML><HEAD>
+<TITLE>Quake Specs v3.3</TITLE>
+<LINK REV="MADE" HREF="mailto:Olivier.Montanuy@wanadoo.fr">
+</HEAD>  
+<BODY BGCOLOR="#FFFFFF">
+
+<H1><FONT COLOR="#007F00">6. <A NAME="CSPR0">The Sprite models</A>
+</FONT></H1>
+
+<P><I>(Thanks to Rapha&euml;l Quinet who wrote most of this
+section)</I></P>
+
+
+<H2><FONT COLOR="#4F1F00"><A NAME="CSPRG">General description of
+Sprites</A></FONT></H2>
+
+<P>The sprites are used in Quake to represent objects that could not
+be rendered properly using polygons (because of a shape with too many
+small details) or that were not worth the trouble of using polygons
+(they render faster than Alias models or BSP based models).</P>
+
+<P>The sprites are essentially designed for stuff like explosions,
+fire, magical effect, or the like.  They can also be used for simple
+objects that have a vertical axis of rotation, like torches or
+barrels.</P>
+
+<P>The format of the sprites is rather simple.  Basically, this is a
+list of 2D pictures (flat bitmaps) organized in lumps.</P>
+
+<P>Some frames are grouped in animation sequences, that start with the
+first picture in the animation and automatically proceed to the next,
+at the time values indicated in the beginning of the sequence.</P>
+
+
+<H2><FONT COLOR="#4F1F00">6.2 <A NAME="CSPRF">The Format of <TT>.SPR</TT> files</A></FONT></H2>
+
+<P>The sprite files (<TT>.SPR</TT>) begin with a header, which is
+immediately followed by the list of frames.  There are no pointers to
+the individual pictures, which means that the engine probably reads
+and parses the whole file once and for all, because the only way to
+access a given picture is to read all previous frames and know their
+width and height.</P>
+
+<H3>6.2.1 Sprite file header</H3>
+
+<P>Here is the format of the <TT>.SPR</TT> file header:
+<PRE>
+typedef struct
+{ char name[4];                // "IDSP"
+  long ver1;                   // Version = 1
+  long type;                   // See below
+  float radius;                // Bounding Radius
+  long maxwidth;               // Width of the largest frame
+  long maxheight;              // Height of the largest frame
+  long nframes;                // Number of frames
+  float beamlength;            // 
+  long synchtype;              // 0=synchron 1=random
+} spr_t;
+</PRE></P>
+
+<P>The size of this header is <TT>0x24</TT> bytes.</P>
+
+<P>Type of sprites:
+<UL> 
+<LI> <b>Type 0</b>: vp parallel upright
+<LI> <b>Type 1</b>: facing upright
+<LI> <b>Type 2</b>: vp parallel
+<LI> <b>Type 3</b>: oriented
+<LI> <b>Type 4</b>: vp parallel oriented
+</UL>
+</P>
+
+<H3>6.2.2 Sprite frames</H3>
+
+<P>There are two types of frames.  Most of them contain a single
+picture, but some of them (in <TT>s_torch.spr</TT> and
+<TT>shots.spr</TT>) contain multiple pictures associated with floating
+point values.</P>
+
+<P>The first kind of frames are marked with a leading (long) zero,
+followed by the picture data:
+<PRE>
+  long group;                 // Always 0 for single-picture frames
+  picture pic;                 // Picture data, see below
+</PRE></P>
+
+<P>The second kind of frames are marked with a leading <TT>0x1</TT> or
+<TT>0x10000000</TT>, followed by the number of pictures, a list of
+floating point values, and a list of pictures:
+<PRE>
+  long group;                  // not zero (0x1 or 0x10000000)
+  long npics;                  // Number of pictures
+  float times[npics];          // 0.0, 0.2, 0.3, ...
+  picture pic[npics];          // Pictures
+</PRE></P>
+
+<P>The <TT>times</TT> are offsets that describe when the corresponding
+picture shall be displayed, relative to an animation frame that
+repeats regularly.  <TT>0.0</TT> means start of the animation frame,
+and <TT>1.0</TT> is the end.  So if you have <TT>npics</TT> pictures,
+and want a regular sequence of pictures, you will start from
+<TT>0.0</TT> and regularly increase the dates by <TT>1/npics</TT>.</P>
+
+<P>By the way... the above is just a wild guess.  But what the heck can
+it be, if it's not time stamps?</P>
+
+<H3>6.2.3 Pictures</H3>
+
+<P>The format of each individual picture is given below.  It contains
+the X and Y offsets, the width and height of the picture, followed by
+the list of pixels.  The reference to the Quake palette is implicit
+and the value <TT>0xFF</TT> denotes a transparent pixel.
+<PRE>
+typedef struct
+{ long ofsx;                   // horizontal offset, in 3D space
+  long ofsy;                   // vertical offset, in 3D space
+  long width;                  // width of the picture
+  long height;                 // height of the picture
+  char Pixels[width*height];   // array of pixels (flat bitmap)
+} picture;
+</PRE></P>
+
+
+
+
+
+<HR SIZE=3>
+</BODY></HTML>

@@ -8,7 +8,12 @@ var QuakeWebTools = QuakeWebTools || {};
 /*
 TODO:
 
-Start building polymer/web components:
+Start to think about creating various parts of the app as web components.
+Initially the app is going to be a viewer for various types, which will then
+later be built upon so that files opened in the app can be modified and saved,
+and eventually created from scratch.
+
+component ideas:
 MDL viewer
 WAD viewer
 File tree
@@ -121,6 +126,7 @@ function app_init() {
       app_main();
     }]);
 
+/*
   var files = [
     "id1/pak0.pak",
     "id1/pak1.pak",
@@ -136,7 +142,7 @@ function app_init() {
   G.FILEMANAGER.queueFiles(files, [function() {
       console.log("GROUP 2 LOADED");
     }]);
-
+*/
   G.FILEMANAGER.loadAllQueued();
 }
 

@@ -1,0 +1,236 @@
+<HTML><HEAD>
+<TITLE>Quake Specs v3.3</TITLE>
+<LINK REV="MADE" HREF="mailto:Olivier.Montanuy@wanadoo.fr">
+</HEAD>  
+<BODY BGCOLOR="#FFFFFF">
+
+<H1><FONT COLOR="#007F00">3. <A NAME="CPAK0">The PACK files</A></FONT></H1>
+
+
+<H2><FONT COLOR="#4F1F00">3.1 <A NAME="CPAKF">The PACK files
+format</A></FONT></H2>
+
+<P>The PACK format is used to emulate a Unix directory arborescence,
+and to avoid putting some hundreds of files on the user's disk.  It is
+not a compressed format, and it's very similar to the WAD format of
+DOOM.</P>
+
+<H3>3.1.1 The PACK Header</H3>
+
+<P>The PACK file starts with a header, that indicates where to find
+the directory, and the size of that directory.  The number of entries
+can be deduced by dividing by <TT>sizeof(pakentry_t) = 0x40</TT>
+<PRE>
+typedef struct
+{ u_char magic[4]= "PACK";     // Name of the new WAD format
+  long diroffset;              // Position of WAD directory from start of file
+  long dirsize;                // Number of entries * 0x40 (64 char)
+} pakheader_t;
+</PRE></P>
+
+<H3>3.1.2 The PACK Directory</H3>
+
+<P>The PACK directory is made of a list of consecutive entries, each with
+the following format:
+<PRE>
+typedef struct
+{ u_char filename[0x38];       // Name of the file, Unix style, with extension,
+                               // 50 chars, padded with '\0'.
+  long offset;                 // Position of the entry in PACK file
+  long size;                   // Size of the entry in PACK file
+} pakentry_t;
+</PRE></P>
+
+<P>At offset <TT>diroffset</TT> in the PACK file, you will find:
+<PRE>
+pakentry_t dir[dirsize/sizeof(pakentry_t)];   // Directory
+</PRE></P>
+
+<P>The directory is preferably placed at the end of the PACK file, but
+it could actually be anywhere.  The entries could also be scattered all
+around the PACK file, leaving large gaps.  If you write a PACK
+hacking utility, you must take care not to introduce too many empty
+space.  Also, you should never assume that the entries are stored in
+the same order as in the directory (they could be in reverse order, for
+example).  If you want to add some data after the last entry, make sure
+that you are really at the end of the file.</P>
+
+<P>Since PACK files are a bit like WAD, it is possible to use the same
+tricks that were used by tools such as DeuSF and NWT to modify the
+PACK file reversibly.  It is hoped, however, that Quake is flexible
+enough so that this trick is not needed.</P>
+
+<H3>3.1.3 Determining the type of PACK Entries</H3>
+
+<P>Contrary to the WAD2 files, there is no tag giving the type of
+each entry.  However, they can be safely recognized by the extension,
+and it's the method used by Quake itself.</P>
+
+<PRE><TABLE BORDER><TR><TD><TABLE>
+<TR valign=top><TD><TT>.WAV</TT>  </TD><TD><a href="qkspec_3.htm#PWAV" target="content">Sound</A> files (RIFF/WAVE)</TD></TR>
+<TR valign=top><TD><TT>.BSP</TT>  </TD><TD><a href="qkspec_4.htm#CBSPF" target="content">levels</A> (map and textures)</TD></TR>
+<TR valign=top><TD><TT>.MDL</TT>  </TD><TD><a href="qkspec_5.htm#CMDLF" target="content">3D models</A> (Alias)</TD></TR>
+<TR valign=top><TD><TT>.SPR</TT>  </TD><TD><a href="qkspec_6.htm#CSPRF" target="content">Sprite</A> models</TD></TR>
+<TR valign=top><TD><TT>.DAT</TT>  </TD><TD><a href="qkspec_3.htm#PDAT" target="content">Pseudo-code</A></TD></TR>
+<TR valign=top><TD><TT>.RC</TT>   </TD><TD><a href="qkspec_3.htm#PRES" target="content">Resources</A></TD></TR>
+<TR valign=top><TD><TT>.CFG</TT>  </TD><TD><a href="qkspec_3.htm#PCFG" target="content">Config Files</A></TD></TR>
+<TR valign=top><TD><TT>.LMP</TT>  </TD><TD><a href="qkspec_3.htm#PLMP" target="content">Lump files</A></TD></TR>
+<TR valign=top><TD><TT>.LMP</TT>  </TD><TD><a href="qkspec_3.htm#PBIN" target="content">End screen</A></TD></TR>
+<TR valign=top><TD><TT>.WAD</TT>  </TD><TD><a href="qkspec_7.htm#CWADF" target="content">WAD2</A> file</TD></TR>
+</TABLE></TD></TR></TABLE></PRE>
+
+
+<H2><FONT COLOR="#4F1F00">3.2 <A NAME="PRES">The resources files</A>
+(<TT>.RC</TT>)</FONT></H2>
+
+<P>Those files are ordinary Text, in Unix format (<TT>LF</TT> only, no
+<TT>CR</TT>), so they won't display correctly under DOS if you are
+using an old editor.  They contain only settings and definitions.</P>
+
+<H2><FONT COLOR="#4F1F00">3.3 <A NAME="PWAV">The sound files</A>
+(<TT>.WAV</TT>)</FONT></H2>
+
+<P>The sound files are ordinary 16-bit RIFF WAVE files (the format
+commonly used under Microsoft Windows, and now supported by many
+utilities under different operating systems).</P>
+
+<H2><FONT COLOR="#4F1F00">3.4 <A NAME="PDAT">The code lump</A>
+(<TT>.DAT</TT>)</FONT></H2>
+
+<P>The .DAT file contains some semi-compiled machine independent
+P-code, instead of the Quake programming language <TT>.QC</TT>
+files.</P>
+
+<P>This file contains the behavior associated to each of the entities.
+For instance, this file contains the frame table that defines how and
+when each frame of the <a href="qkspec_5.htm#CMDLF" target="content">Alias Models</A> must be
+displayed.</P>
+
+<P>This file also contains the light styles used to animate the <A
+HREF="#BL7">Faces</A> of the BSP models.  Those light styles can be
+found as strings, among the other character strings.</P>
+
+<P>Here is a very partial description of that data lump. Since the 
+source of the Quake C compiler was released, you had better directly
+look at <b>pr_comp.h</b> for all the details about the structure
+of a compiled .DAT lump.</P>
+
+<p>the only interesting part is the list of text strings, because it gives the
+names of possible spawning sequences for the <a href="qkspec_4.htm#BL0" target="content">Entities</A>.</P>
+
+<PRE>
+// addapted from pr_comp.h
+
+typedef struct
+{ long  version;               // 6
+  long  crc;                   // CRC over progdefs.h
+  long  ofs_statements;        // table of code statements. 
+  long  num_statements;        // number of statements
+  long  ofs_globaldefs;        // table of definitions of global variables
+  long  num_globaldefs;        // number of definitions
+  long  ofs_fielddefs;         // table of definitions of fields
+  long  num_fielddefs;         // number of definitions
+  long  ofs_functions;         // Table of functions definitions
+  long  num_functions;         // number of functions 
+  long  ofs_strings;           // Character strings, separated by '\0'. First one is \0
+  long  size_strings;          // total size of string data
+  long  ofs_globals;           // Unstructured list of Constants and variable
+  long  num_globals;           // num_globals*4 = total size of global data
+  int   entityfields;          // total size of entity definition
+} dprograms_t;
+// table of statements
+typedef struct
+{ u_short op;                  // operation code
+  short   a;                   //
+  short   b;                   // operation dependend parameters
+  short   c;                   //
+} statement;
+// table of definitions
+typedef struct                 // globaldef and fielddef
+{ u_short type;                // type of value stored in table
+  u_short offset;              // offset to value, in the global table
+  long    s_name;              // offset to name, in string table
+} def;                 
+// table of functions
+typedef struct
+{
+  long	first_statement;	// offset to the first statement, in the statements table
+                                // negative numbers indicate builtin functions
+  long  parm_start;             // start of parameters
+  long  locals;			// total size of parmeters and all local variable
+  long	profile;		// counter incremented at runtime, for each call
+  long	s_name;                 // index to name, in the string table
+  long  s_file;			// pointer to the source file name, in the string table
+  long	numparms;               // number of parameters
+  uchar	parm_size[8];           // size of each parameter in memory
+}function [ functions.size];
+</PRE>
+
+
+<P>The CRC in the header is not a protection against possible corruption,
+it's a protection against misuse. As a matter of fact, since part of the
+definitions in <b>defs.qc</b> are shared between Quake and the PROGS.DAT,
+and allocated statically in Quake, running a PROGS.DAT with an incompatible
+version of Quake could cause serious crashes. Having the same CRC values
+(calculated over <b>progdefs.h</b>) ensures that the PROGS.DAT and Quake 
+are compatible.</P>
+
+
+
+<H2><FONT COLOR="#4F1F00">3.5 <A NAME="PLMP">The lump file</A>
+(<TT>.LMP</TT>)</FONT></H2>
+       
+<P> There are three kinds of lumps: Palette, colormap, pictures.</P>
+
+
+<H4>PALETTE</H4> 
+
+<P>This is the game the color palette:
+<PRE> 
+struct { u_char Red, u_char Green, u_char Blue} Palette[256];
+</PRE></P>
+
+<H4>COLORMAP</H4> 
+
+<P>This is the precalculated color map, made of 32 tables.
+each table contains 256 indexes to the actual colors in the colormap.
+<PRE>                                     
+u_char ColorIndex[32][256];
+</PRE>                                  
+</P>
+
+<P>When light level is <TT>light</TT> and the color is <TT>color</TT>, 
+the games uses the color index:<BR>
+<TT>c = ColorIndex[ ((light>>3)&0x1F)][color]</TT>.
+</P>
+                                             
+
+<H4>Pictures</H4>
+
+<P>These are simple flat pictures, with indication of width and height, that
+are used for menus, status bar and the like.
+<PRE> 
+typedef struct
+{ long width;
+  long height;
+  u_char Color[width*height];                                       
+} picture_t;
+</PRE></P>
+
+
+<H2><FONT COLOR="#4F1F00">3.6 <A NAME="PBIN">The end screen</A>
+(<TT>.BIN</TT>)</FONT></H2>
+ 
+<P>A classical DOS text screen, 80x25 with color tags. Same as
+the end screen in DOOM.</P>                                                                
+
+
+<H2><FONT COLOR="#4F1F00">3.7 <A NAME="PCFG">The config file</A>
+(<TT>.CFG</TT>)</FONT></H2>
+  
+<P>A simple text file, that contains the default configuration of keys.</P>
+
+
+<HR SIZE=3>
+
+</BODY></HTML>

@@ -1,0 +1,566 @@
+<HTML><HEAD>
+<TITLE>Quake Specs v3.3</TITLE>
+<LINK REV="MADE" HREF="mailto:Olivier.Montanuy@wanadoo.fr">
+</HEAD>  
+<BODY BGCOLOR="#FFFFFF">
+
+<H1><FONT COLOR="#007F00">8. <A NAME="NETP0">The Network protocol</A></FONT></H1>
+
+<H2><FONT COLOR="#4F1F00">8.1 <A NAME="NETP">Generalities</A></FONT></H2>
+
+<P>This is an incomplete description of the Quake Network Protocol used
+in Quake version 1.01. The protocol used in Quake Worlds will probably be rather 
+different, and hopefully much more optimised.</P>
+
+<P>The network protocol described below is not derived from documents by
+id software, so it's likely to be incomplete (or even wrong).
+</P>
+
+<P>The messages exchanged by the Quake client and servers are not really complex
+to understand, but they are quite numerous, and of heterogeneous structure.
+Please read the <a href="qkspec_8.htm#NETEXPL" target="content">example</A> of network session, before trying
+to emulate a Quake client or server.
+</P>
+
+
+<P>Since the messages in the .DEM files have exactly the same format as some
+of the network protocol messages, it is highly recommended that you also
+take a look at the <a href="http://www.physik.uni-leipzig.de/~girlish/games/">DEM specs</a> 
+by Uwe Girlich.</P>
+
+<P>When describing the content of messages, we will use the same conventions
+as in the DEM specs:
+<PRE>
+ReadString() = read a sequence of characters, terminated by NULL ('\0')
+ReadAngle()  = read a byte, and multiply it by <TT>360.0 / 256.0</TT> to make it into degrees.
+ReadChar()   = read a signed integer, on one byte.
+ReadShort()  = read a signed integer, on two bytes, Big Endian order (Intel order).
+ReadLong()   = read a signed integer, on four bytes, Big Endian order (Intel order).
+ReadFloat()  = read a floating point number, on four bytes, Big Endian order (Intel order).
+</PRE>
+</P>
+
+
+<H2><FONT COLOR="#4F1F00">8.2 <A NAME="NETCTRL">Control messages</A></FONT></H2>
+
+<P>The structure of control messages is the following:
+<PRE>
+typedef struct
+{ short Type=0x8000;           // (Little Endian) Type of message.
+  short Length;                // (Little Endian) Length of message, header included. 
+  char  message[Length-4];     // The contents of the message.
+} MSGHEADER;
+</PRE>
+A control message, as opposed to a more ordinary <a href="qkspec_8.htm#NETGAME" target="content">game</A> message,
+if characterised by the fact that <TT>Type & 0x8000</TT> is not zero (which means
+that bit 15 is always set on a control message).
+</P>
+<P><B>Warning:</B> the fields <TT>Type</TT> and <TT>Length</TT> are in Little Endian order
+(most significant byte first). To read them on an Intel processor, you must swap the higher
+and lower bytes.
+</P>
+
+<P>The structure of the <TT>message</TT> fields is: a single-byte code, followed by
+code-dependant informations. The following table details this information.
+</P>
+
+<P><I>Thanks to <a href="mailto:oliber@aiko.upd.edu.ph">A.Oliver</a> for the description
+of the control requests 0x3, 0x4, 0x82, 0x84, 0x85 in the Unofficial Quake Network
+Protocol Specs 1.01.</i> 
+</P>
+
+<TABLE BORDER>
+<TR><TH>Messages</TH><TH>Code</TH><TH>Data</TH></TR>
+<TR><TD><A NAME="CTRLCONNECT">Connection Request</A>
+</TD><TD> 0x01
+</TD><TD> <PRE>
+GameName = ReadString();      // = "QUAKE"
+ProtocolVersion = ReadChar(); // = 3</PRE>
+</TD></TR>
+<TR><TD><A NAME="CTRLASKINFO">Request Server Information</A>
+</TD><TD> 0x02
+</TD><TD> <PRE>
+GameName = ReadString();      // = "QUAKE"
+ProtocolVersion = ReadChar(); // = 3</PRE>
+</TD></TR>
+<TR><TD><A NAME="CTRLASKPLAYER">Request Player Information</A>
+</TD><TD> 0x03
+</TD><TD> <PRE>
+Player = ReadChar();      // player number, from 0 to 15
+</PRE>
+</TD></TR>
+<TR><TD><A NAME="CTRLASKRULE">Request Rule Information</A>
+</TD><TD> 0x04
+</TD><TD> <PRE>
+Rule = ReadString();     // name of the previous rule
+// To pool all rule names, start with Rule = "", then continue
+// with the rule name obtained in the <a href="qkspec_8.htm#CTRLGIVRULE" target="content">reply</A>,
+// until an empty reply is received.
+</PRE>
+</TD></TR>
+<TR><TD><A NAME="CTRLACCEPT">Accept Connection</A>
+</TD><TD> 0x81
+</TD><TD> <PRE>
+Port    = ReadLong();    // Client's personal UDP or IPX port number
+</PRE>
+</TD></TR>
+<TR><TD><A NAME="CTRLREJECT">Reject Connection</A>
+</TD><TD> 0x82
+</TD><TD> <PRE>
+Reason  = ReadString();  // Reason for rejecting the request</PRE>
+</TD></TR>
+<TR><TD><A NAME="CTRLGIVINFO">Give Server Informations</A>
+</TD><TD> 0x83
+</TD><TD> <PRE>
+Address = ReadString();  // Server address, in ascii
+Hostname= ReadString();  // name of the host machine
+Mapname = ReadString();  // name of the current map
+Players = ReadChar();    // current number of players
+Maximum = ReadChar();    // maximum number of players
+ProtocolVersion = ReadChar(); // = 3</PRE>
+</TD></TR>
+<TR><TD><A NAME="CTRLGIVPLAYER">Give Player Informations</A>
+</TD><TD> 0x84
+</TD><TD> <PRE>
+Player  = ReadChar();    // player number, from 0 to 15
+Name    = ReadString();  // name of the player
+Colors  = ReadChar();    // shirt/pants colors
+ReadChar();              // zero ???
+ReadChar();              // zero ???
+ReadChar();              // zero ???
+frags   = ReadLong();    // Number of frags
+time    = ReadLong();    // Connection time in seconds 
+Address = ReadString();  // ip address and port, or "LOCAL".
+</PRE>
+</TD></TR>
+<TR><TD><A NAME="CTRLGIVRULE">Give Rule Informations</A>
+</TD><TD> 0x85
+</TD><TD> <PRE>
+// If this message is void, there are no more rules.
+Rule    = ReadString();  // Name of the rule
+Value   = ReadString();  // Ascii value of the requested rule
+// Rule is one of "sv_maxspeed", "sv_friction", "sv_gravity",
+// "noexit", "teamplay", "timelimit" or "fraglimit".
+</PRE>
+</TD></TR></TABLE>
+
+<P>Note: the control messages contain only one message part (one single
+code, followed by code-dependant information). But there could be many
+parts, though it has never been observed.</P>
+
+
+
+<HR>
+<H2><FONT COLOR="#4F1F00">8.3 <A NAME="NETGAME">Games messages</A></FONT></H2>
+
+<P>Every network packet send via UDP (and probably IPX) has the same header:
+<PRE>
+typedef struct
+{ short Type;                  // (Little Endian) Type of message.
+  short Length;                // (Little Endian) Length of message, header included. 
+  long  Order;                 // (Little Endian) Order of emission.
+  char  message[Length-8];     // The contents of the message.
+} MSGHEADER;
+</PRE>
+A game message, as opposed to a <a href="qkspec_8.htm#NETCTRL" target="content">Control</A> message, is characterised
+by the expression <TT>(Type & 0x8000) == 0</TT>.
+</P>
+<P><B>Warning:</B> The fields <TT>Type</TT>, <TT>Length</TT> and <TT>Order</TT> are in 
+Little Endian order (most significant byte first). To read them on an Intel processor, 
+you must swap the higher and lower bytes.
+</P>
+<H3>8.3.1 Types of messages</H3>
+
+
+<TABLE BORDER>
+<TR><TH> <TT>Type</TT></TH><TH>Meaning</TH><TH>Explanations</TH></TR>
+<TR><TD> <TT>0x01</TT>
+</TD><TD> <A NAME="MSGPART">Part of a Reliable Message</A>
+</TD><TD> <i>This message must be acknowledged.</i><br>
+	  When message that doesn't fit into a single network packet must be sent, it is split
+          in as many parts as necessary. Each of these parts will be sent in order, as message
+          type <TT>0x01</TT>, except the last part that will be sent as a message type <TT>Ox09</TT>.
+</TD><TR>
+<TR><TD> <TT>0x02</TT>
+</TD><TD> <A NAME="MSGACK">Acknowledge of a Reliable Message</A>
+</TD><TD> This message is sent by the recipient of a message type <TT>0x01</TT> or <TT>0x09</TT>,
+          to confirm that the message was received correctly.
+</TD><TR>
+<TR><TD> <TT>0x09</TT>
+</TD><TD> <A NAME="MSGEND">End of a Reliable Message</A>
+</TD><TD> <i>This message must be acknowledged.</i><br>
+          This is just like message type <TT>0x01</TT>, except that once the message is received,
+          the whole message buffer can be interpreted.<BR>
+          Note that if the message to be sent is small enough to fit into a single network packet,
+          then it will be sent as a single message type <TT>0x09</TT>.
+</TD><TR>
+<TR><TD> <TT>0x10</TT>
+</TD><TD> <A NAME="MSGUPDATE">Update Message</A>
+</TD><TD> <i>This message must not be acknowledged.</i><br>
+          The updates message are made of a single packet, and are usually very
+          short (about 20 to 200 bytes).
+</TD><TR>
+</TABLE>
+
+<H3>8.3.2 Usage of messages</H3>
+<P>
+<UL>
+<LI> Reliable messages are used to send the game initialisation informations, that would
+     crash the client if they were not received correctly. But that kind of message is
+     not sent anymore, once game play has started.<br>
+     The field <TT>Order</TT> is used to keep track of the order number of the last message
+     sent, and to acknowledge a message received.
+<LI> Update messages are used to send game update informations, like movement of entities,
+     and movement of the player. They are the only messages used during game play, until
+     the level ends.<BR>
+     The fields <TT>Order</TT> is increasing by one with every message, but it doesn't seem
+     to be used. Maybe it allows a Client to detect if a previous message has been lost, and
+     should be repeated.
+</UL>
+</P>
+
+
+<H3>8.3.3 Interpretation of the <TT>message</TT> contents</H3>
+
+<P>The message content is made of a single byte code, followed by some code-dependent data,
+and then followed by another byte code, and so on until the end of the message.
+</P>
+<P>That means you need to know how to interpret all the possible byte codes to read a
+single message. That also means that if you make a mistake in the encoding of a single
+code, then all the rest will be screwed up, and can eventually crash the game.
+So trust it on luck!
+</P>
+<P>To make matter worse, the byte codes must be interpreted differently, wether the message
+comes from a game <a href="qkspec_8.htm#NETSERVER" target="content">Server</A> or from a game <a href="qkspec_8.htm#NETCLIENT" target="content">Client</A>.
+</P>
+
+
+<H2><FONT COLOR="#4F1F00">8.4 <A NAME="NETCLIENT">Format of client messages</A></FONT></H2>
+
+<P>This is the format of the <TT>message</TT> field, for messages sent by a game client.
+This field is an unstructured set of bytes, that must be read one by one in order
+to decode all the parts of the message.
+</P>
+
+<P>First, you should read one byte (the message code). Then, depending, on this code,
+you must read zero or more bytes, depending on the code. That gives you one prt of
+the message. To read the next part, read one byte, that gives you a code, and 
+so on... until the end of the <TT>message</TT> field.</P>
+
+<P>Stop at the first unrecognised code, it's no use to continue if you have
+lost your marks.</P>
+
+<H3>8.4.1 Codes for client messages</H3>
+
+<TABLE BORDER>
+<TR><TH>Code</TH><TH>Message</TH><TH>Informations</TH><TH>Explanations</TH></TR>
+<TR><TD> <A NAME="CLIENTNULL">0x00</A>
+</TD><TD>No Operations
+</TD><TD><PRE>
+Void</PRE>
+</TD><TD>This message indicates an error.
+</TD></TR>
+<TR><TD> <A NAME="CLIENTNOP">0x01</A>
+</TD><TD>Keep Alive
+</TD><TD><PRE>
+Void</PRE>
+</TD><TD>This message is sent when the client is iddle, but the connection 
+should not be dropped.
+</TD></TR>
+<TR><TD> <A NAME="CLIENTDISC">0x02</A>
+</TD><TD>Disconnect
+</TD><TD><PRE>
+Void</PRE>
+</TD><TD>This message is sent when the player has left the game, and
+the connection should be dropped. This is the last message sent
+by a client.
+</TD></TR>
+<TR><TD><A NAME="CLIENTMOVE">0x03</A>
+</TD><TD>Client Movement
+</TD><TD><PRE>
+ActionTime= ReadFloat();  
+TiltAngle = ReadAngle();  
+YawAngle  = ReadAngle();  
+FlipAngle = ReadAngle();  
+SpeedFront = ReadInt16();  
+SpeedRight = ReadInt16();  
+SpeedUp    = ReadInt16();  
+Flag     = ReadChar();   
+// Flag & 1: fire.
+// Flag & 2: jump.
+Impulse   = ReadChar();   
+// Impulse command
+</PRE>
+</TD><TD>This message is sent when the player tries to move.<br>
+All fields (except the angles) are zero by default, if the player doesn't move.<br>
+The action time is usually some time in the near past, when the command was
+issued. Action messages are often repeated with the same action time,
+and then they all count for one message.<br>
+The angles and speed are those desired by the player, but maybe
+not those that the physic of the worl will allow. The player's angle, position and
+velocity are controlled by the game server, not by the client, so the consequences
+of a given movement attempt will only be known when the server sends an update.
+</TD></TR>
+<TR><TD> <A NAME="CLIENTORDER">0x04</A>
+</TD><TD>Console order
+</TD><TD>
+<PRE>
+Command = ReadString()
+</PRE>
+</TD><TD>This message is sent by the client, when it must send an order on
+the console.<br>
+Those messages are used both for hidden game startup commands, and for
+the orders that a player will type on the console (like <b>say xxx</b> or
+<b>say_team xxx</b>). 
+</TD></TR>
+<TR><TD>others
+</TD><TD>Unknown
+</TD><TD><PRE>
+Void</PRE>
+</TD><TD>Those codes seem to be useless.
+</TD></TR>
+</TABLE>
+
+
+<H3>8.4.2 About the player movement order</H3>
+
+<p>The angles transmitted by a player movements are directly the angles set
+by the player, whether via the mouse or via the look up/down keys. Note that
+there is a flip angle indicated, but since no player command can possibly act
+on it, it's always zero. Too bad... but this is not DESCENT.</p>
+
+<p>The speed are ordinary signed integers, that seem to indicate a desired
+speed in units per second. Experiment shows that when the player places an
+order for +200 forward speed (typical run order), then the player accelerate,
+until the speed stabilises at +200 coordinates per second (which makes it
+10 coordinates per update, that happen every 20th of second).</p>
+
+<p>This behavior proves that this parameter is a speed, <b>not</b> an 
+acceleration. Well, this is a walking or swimming dude after all, not a ship
+in the void. He's moving in a world where friction is preponderant.
+Acceleration is only simulated, in the sense that you cannot change to
+arbitrary speed values in no time. On ordinary ground, accelerations
+seem limited to about 1000 to 15000 units/second².
+</p>
+
+
+<H2><FONT COLOR="#4F1F00">8.5 <A NAME="NETSERVER">Format of server messages</A></FONT></H2>
+
+<P>The game messages sent by the Quake server are <b>exactly</b> the same as the ones
+used in the demo files (.DEM), so they will not be repeated here. Look at the
+DEM file specifications.</p>
+
+<p>A single Quake server message contains exactly the same informations as those
+contained in a .DEM file <b>block of messages</b>. That is rather logical, since
+they certainly didn't create a new format just for the .DEM files, but used the
+network protocol instead.
+</p>
+
+<p>Let's just recall those useful orders:
+<TABLE BORDER>
+<TR><TH>Code</TH><TH>Message</TH><TH>Informations</TH><TH>Explanations</TH></TR>
+<TR><TD> <A NAME="SERVERSIGNON">0x19</A>
+</TD><TD>Set signon state
+</TD><TD><PRE>
+state = ReadChar()</PRE>
+</TD><TD>This sets the <b>signon state</b>, a state variable
+ that is used to guide the intialisation of a client.
+<pre>
+ <b>1</b> = PRESPAWN (prepare for entity spawning).
+ <b>2</b> = INIT LIGHT EFFECTS
+ <b>3</b> = START 3D RENDERING (run the game).
+</pre>
+</TD></TR>
+<TR><TD> <A NAME="SERVERUPDATE">0x80-0xFF</A>
+</TD><TD>Entity update
+</TD><TD><PRE>
+Based on mask.
+Very complicated.
+</PRE>
+</TD><TD>This is the standard message that updates the
+position, angles, frame and models of a given entity.
+</TD></TR>
+</TABLE>
+</p>
+
+<H2><FONT COLOR="#4F1F00">8.6 <A NAME="NETEXPL">Network session example</A></FONT></H2>
+
+<P>Here are some examples of how a Quake server and a Quake client interact.
+They sumarise an <a href="session.htm">actual game session</a>, observed by 
+intercepting the game packets.</P>
+
+
+<H3>8.6.1 Request informations about the game</H3>
+
+<P>Those messages are sent to and from the <TT>PUBLIC UDP PORT</TT> of 
+the server (which is <TT>26000</TT> by default).
+<pre>
+Client sends a <a href="qkspec_8.htm#CTRLASKINFO" target="content">Request Informations</A> message,
+	with game name <TT>QUAKE</TT>.
+Server sends a <a href="qkspec_8.htm#CTRLGIVINFO" target="content">Give Informations</A> message,
+        with indications on the current map, number of players...
+</pre>
+</p>
+
+<p>Note: Those messages can be sent to interrogate a given Quake server,
+without really disturbing it. Of course, if you flood a Quake server
+with such messages, it might slow down.</p>
+
+
+<H3>8.6.2 Establish a game session</H3>
+
+<p>Those messages are sent to and from the <TT>PUBLIC UDP PORT</TT> of 
+the server (which is <TT>26000</TT> by default).
+<pre>
+Client sends a <a href="qkspec_8.htm#CTRLCONNECT" target="content">Connect</A> message,
+	with game name <TT>QUAKE</TT>.
+Server sends an <a href="qkspec_8.htm#CTRLACCEPT" target="content">Accept</A> message,
+	containing the identifier of a <TT>PERSONAL UDP PORT</TT> for the client.
+        Client now expects server message coming from the <TT>PERSONAL UDP PORT</TT>
+</pre>
+</p>
+<p>Warning: after it replied with an <a href="qkspec_8.htm#CTRLACCEPT" target="content">Accept</A> message,
+the game server will only use a <TT>PERSONAL UDP PORT</TT> to communicate 
+with a given client. The server <TT>PUBLIC UDP PORT</TT> is not used anymore
+to talk to that client. It can only be used by clients that are not connected yet.
+
+<H3>8.6.3 Prepare the client for the game (precache)</H3>
+
+<PRE>
+Server sends a big message that contains:
+  - the server banner "VERSION 1.01 SERVER (21456 CRC)"
+  - a server info message (code 0x0B) with map name, and precached models and sounds
+  - an indication that client should move to PRESPAWN state.
+Client sends a No Operation (code 0x01)
+Client sends a console command (code 0x04) "prespawn", indicating prespawn is finished.
+Server sends a big message that contains order to spawn static sounds and static entities
+  - For all the static entities described in the .BSP file, 
+     One "Spawn Static entity" order, and possibly a Static Sound order.
+Client sends a player information message:
+  - console order <b>"name PLAYER\n"</b> (where PLAYER is the player name)
+  - console order <b>"color 0 0\n"</b>   (shirt and pants colors)
+  - console order <b>"spawn "</b> to indicate the client is ready to play.
+Server sends a big message:
+  - For each possible player in the game (including those not connected):
+     a set of orders UPDATE NAME, UPDATE FRAGS, UPDATE COLORS
+  - For each of the 64 light style:
+     a SET LIGHT STYLE message.
+  - an UPDATE STATE message for total and found monsters and secrets
+  - a SET ANGLE order, to orient the player's view
+  - a CLIENT DATA order, fix the status bar display
+  - an order to move to <b>Start 3d Rendering</b> state.
+  - a last update NAMe, FRAGS, and COLORS, for the client.
+Client sends a console message <b>"begin"</b>.
+</PRE>
+
+
+<H3>8.6.4 Run the game with the client</H3>
+
+<PRE>
+Every 50 milliseconds,
+Server sends an update message, that contains:
+  - an indication of the game time
+  - a CLIENT DATA order, to fix the status bar display (mostly useless)
+  - an UPDATE ENTITY order for each entity possibly in sight
+     if the entity has not changed, only minimal informations will be sent.
+
+Each time the player moves,
+Client sends an update message containing:
+  - a <a href="qkspec_8.htm#CLIENTMOVE" target="content">movement</A> order.
+</PRE>
+
+
+<H2><FONT COLOR="#4F1F00">8.7 <A NAME="NETBOT">Making a fake client (aka Bot)</A></FONT></H2>
+
+<p>These are only partial informations, but that should be enough for a start.</p>
+
+<H3>Connecting the fake client and the Quake server</H3>
+
+<p>Here is a simplified connection procedure, to register into a Quake server.
+<ol>
+<li> Client sends <a href="qkspec_8.htm#CTRLCONNECT" target="content">Connect</a> message to the server,
+  on his public port (usually 26000).
+<li> Server replies with an <a href="qkspec_8.htm#CTRLACCEPT" target="content">Accept</a> message, that 
+   contains the name of an UDP port that is dedicated to the client (usually
+   in the range 1025-1200). 
+<li> Now, to talk the the server, the client sends messages <b>only</b> to the 
+  dedicated UDP port. The public UDP port becomes useless for the client.
+<li> From now on, the client must <a href="qkspec_8.htm#MSGACK" target="content">acknowledge</A> all the 
+ <a href="qkspec_8.htm#MSGPART" target="content">message parts</A> and <a href="qkspec_8.htm#MSGEND" target="content">message last parts</A>
+ that are sent by the server, otherwise the server will repeat the same message 
+ forever and no further progress will be made.
+<li> The client waits for a <a href="qkspec_8.htm#MSGEND" target="content">long message</A> that contains and order to 
+  <a href="qkspec_8.htm#SERVERSIGNON" target="content">set the signon state</a> to 1 (prespawn). 
+<li> Client sends a <a href="qkspec_8.htm#MSGEND" target="content">message</A> containing a single 
+    <a href="qkspec_8.htm#CLIENTORDER" target="content">Console</a> order:
+<pre>
+    <b>"prespawn"</b>.       (there is no return character at the end)
+</pre>
+<li> The client waits for a <a href="qkspec_8.htm#MSGEND" target="content">long message</A> that contains and order to 
+  <a href="qkspec_8.htm#SERVERSIGNON" target="content">set the signon state</a> to 2 (init light effects). 
+<li> Client sends a <a href="qkspec_8.htm#MSGEND" target="content">message</A> containing
+   three <a href="qkspec_8.htm#CLIENTORDER" target="content">Console</a> orders:
+<pre>
+    <b>"name <i>player</i>\n"</b>   ('\n' is the return character)
+    <b>"color <i>0 0</i>\n"</b>     ('\n' is the return character)   
+    <b>"spawn "</b>          (there is white space at the end).
+</pre>
+<li> The client waits for a <a href="qkspec_8.htm#MSGEND" target="content">long message</A> that contains and order to 
+  <a href="qkspec_8.htm#SERVERSIGNON" target="content">set the signon state</a> to 3 (start 3D rendering). 
+<li> Client sends a <a href="qkspec_8.htm#MSGEND" target="content">message</A> containing
+    a single <a href="qkspec_8.htm#CLIENTORDER" target="content">Console</a> order:
+<pre>
+    <b>"begin"</b>           (there is no return character at the end).
+</pre>
+<li> From now on, the game is running, and the client starts receiving a flood
+   of update messages.
+</ol>
+
+
+<H3>The fake client at play</H3>
+
+<p>How to send movement orders:
+<ol>
+<li> Server sends an <a href="qkspec_8.htm#MSGUPDATE" target="content">Update</a> message, containing entity
+  <a href="qkspec_8.htm#SERVERUPDATE" target="content">update orders</A> for all the entities in sight.
+<li> Client calculates whatever clever moves he wishes.
+<li> Client sends an <a href="qkspec_8.htm#MSGUPDATE" target="content">Update</a> message, containing a
+  single <a href="qkspec_8.htm#CLIENTMOVE" target="content">Movement</a> order.
+</ol>
+</p>
+
+<p>How to send orders on the server console:
+<ol>
+<li> The client sends a <a href="qkspec_8.htm#MSGEND" target="content">reliable message</A> containing a 
+  <a href="qkspec_8.htm#CLIENTORDER" target="content">Console</a> order.
+</ol>
+</p>
+
+<p>A client receives no update for the entities not in sight, so you cannot
+cheat and make some radar that sees through walls. BUT you can of course make
+a simple bot that will turn immediatly toward any enemy coming in his back.
+And will of course avoid any rockets, or even straffe out of the line of sight
+of any hostile player.
+</p>
+<p> Beware that the client must rely on himself alone to guess the geometry of the
+ room he is in. The best is of course to load the .BSP for the level, and to keep
+ track of the position of every entities, so as to know which paths are possible,
+ and which are not. But you will soon discover that the .BSP per se is not enough
+ to code a good behavior for a Bot, because there is no trace of the links between
+ the rooms.
+</p> 
+ 
+<h3>Leaving the server</h3>
+
+<p>Here is the cleanest way to leave the server:
+<OL>
+<LI> Client sends a <a href="qkspec_8.htm#CLIENTDISC" target="content">Disconnect</a> order.
+</OL>
+Of course, if a client hangs and stops emitting messages, the server
+will kick him out after a few minutes. But please <b>be kind to the server</b>
+and log off when you cannot emit anymore. That means that you should catch
+any exception in your code, and send a disconnect order if it crashes.
+</p>
+
+<HR SIZE=3> 
+</BODY></HTML>

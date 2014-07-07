@@ -1,0 +1,586 @@
+<HTML><HEAD>
+<TITLE>Quake Specs v3.3</TITLE>
+<LINK REV="MADE" HREF="mailto:Olivier.Montanuy@wanadoo.fr">
+</HEAD>  
+<BODY BGCOLOR="#FFFFFF">
+
+<H1><FONT COLOR="#007F00">5. <A NAME="CMDL0">The Entity Alias
+Models</A></FONT></H1>
+
+<P><I>(Thanks to Brian Martin who clarified most of this section)</I></P>
+
+<P>Alias models can be used for entities, like players, objects, or
+monsters.  Some entities can use sprite models (that are similar in
+appearance to those of DOOM, though the structure is totally
+different) or even maybe models similar to those of the levels.</P>
+
+<P>Importing models from 3DS or the likes is now quite easy.  You'll
+just have to work out a few things on your own (like calculation of
+the vertex normals, matching them with the vertex normal table,
+finding the bounding area of the object, and scaling the vertices to
+8-bit values).</P>
+
+
+<H2><FONT COLOR="#4F1F00">5.1 <A NAME="CMDLP">Presentation of Alias Models</A></FONT></H2>
+
+
+<P>You need not bother too much about the way Alias Models are
+rendered, just keep in mind that the more simple the model, the faster
+the game will be.</P>
+
+<P>Here is an attempt at describing what the different parts of the
+model represent.  This description is a bit outdated, though.</P>
+
+<P>First imagine a wireframe model of the entity, made of triangles.
+This gives the general shape of the entity.  For instance, imagine you
+have the general shape of a cow, made of triangles in 3D space.</P>
+
+<P>The 3D vertices define the position of triangles, and contrary
+to level models, there is no need for elaborate stuff like nodes,
+planes, faces.  Only triangles and vertices.</P>
+
+<P>Now, there is something missing: the skin.  A cow without skin
+looks pretty ugly.</P>
+
+<P>Imagine that you have a flat carpet made of the skin of an unlucky
+cow.  All you need to do is put some parts of this carpet at the
+relevant place on the wireframe model of the cow, and you'll get a
+fairly realistic (though a bit polygonal) cow.  Actually, you will
+need two carpets: one for the upper part and one for the lower
+part.</P>
+
+<P>For each triangle in the wireframe model of the cow, there will be
+a corresponding triangle cut from the skin picture.  Or, in other
+words, for each 3D vertex of a triangle, there will be a corresponding
+2D vertex positioned on the skin picture.</P>
+
+<P>It is not necessary that the triangle in 3D space and the triangle
+on the skin have exactly the same shape (in fact, it is not possible
+for all triangles) but they should have shapes roughly similar, to
+limit distortion and aliasing.</P>
+
+<P>By the way: there is no Mip mapping on the Alias models, so they
+don't look very good in distance, which is not too bad since they are
+constantly supposed to be moving or changing.  If you want then to
+look fine, do them with BSP models.  But then they won't move.</P>
+
+
+<H2><FONT COLOR="#4F1F00">5.2 <A NAME="CMDLA">Animating Alias models</A></FONT></H2>
+
+<P>The Alias Model animation is based on frames (in DOOM, sprites were
+also animated by frames).  So the deformations are defined once and
+for all, and there is no skeletal model or any similar physical model
+involved in the deformations... well, at least not in real time.</P>
+
+<P>Once the general shape of the model (for instance, a cow) is
+defined, and the skin is mapped correctly on that shape, animation is
+pretty straightforward: just move the triangles around and it will
+seem to move.</P>
+
+<P>To move the triangle, you need only modify the position of the 3D
+vertices that are part of it.  For instance, to move the leg of the
+cow, you will move the vertices that define the endpoints of the legs.
+You will also move the other vertices a bit, so that the movement
+looks less mechanical.</P>
+
+<P>Chances are that creating a fine looking animation is gonna be a
+very tough job, a bit like with the DOOM sprites.  I would bet that
+the quality of the animation will be the most critical point.</P>
+
+<P>Note that the animation consists <TT>only</TT> in changing vertex
+positions (and that's why there is one set of vertices for each
+animation frame).</P>
+
+<P>The skin of the cow is not modified, neither are the definition of
+the triangles.  If you want blood stains to appear on the skin, you'll
+have to hide the original triangle, by reducing it or by putting
+another triangle in front.</P>
+
+<P>As remarked by Bernd Kreimeier, this method is similar to the
+trick squids use when they want to change color: their skin is
+made os small areas, of two different colors, and they can reduce
+or enlage them at will.</P>
+
+<P>Along the same idea, if you want parts of the models, like head,
+weapons and the like, to go flying away when they are cut, then they
+must be defined using parts of the skin that are separate from the
+parts used for the body.</P>
+
+<P>Or you can use separate models, like the player gibs, but then the
+original part must be reduced to a very small size.</P>
+
+
+<H2><FONT COLOR="#4F1F00">5.3 <A NAME="CMDLF">Alias Model
+<TT>.MDL</TT> file format</A></FONT></H2>
+
+<P>The <TT>.MDL</TT> files are collection of lumps, but contrary to
+<TT>.BSP</TT> files there are no pointers to access the lumps
+directly, and it is suspected that there will be, in future versions
+of the models.</P>
+
+<P>Once you have the file header, you can find all the other parts,
+just by calculating their position in the file.</P>
+
+<P>A Model file contains:
+<OL>
+<LI> A <a href="qkspec_5.htm#MDS" target="content">skin texture</A>, that describes the color of the
+   skin and clothes of the creature, or whatever it can be wearing.
+<LI> A list of <a href="qkspec_5.htm#MD2" target="content">skin vertices</A>, that are just the
+   position of vertices on the skin texture.
+<LI> A list of <a href="qkspec_5.htm#MD3" target="content">triangles</A>, the describe the general
+   shape of the model.
+<LI> A list of <a href="qkspec_5.htm#MD4" target="content">animation frames</A>.<BR>
+   Each frame holds a list of the 3D vertices and the index of the
+   precalculated vertex normal.
+</OL></P>
+
+<H3>5.3.0 <A NAME="MD0">Alias Model Header</A></H3>
+
+<P>Here is the format of the <TT>.MDL</TT> file header:
+<PRE>
+typedef struct
+{ long id;                     // 0x4F504449 = "IDPO" for IDPOLYGON
+  long version;                // Version = 6
+  vec3_t scale;                // Model scale factors.
+  vec3_t origin;               // Model origin.
+  scalar_t radius;             // Model bounding radius.
+  vec3_t offsets;              // Eye position (useless?)
+  long numskins ;              // the number of <a href="qkspec_5.htm#MDS" target="content">skin textures</A>
+  long skinwidth;              // Width of <a href="qkspec_5.htm#MDS" target="content">skin texture</A>
+                               //           must be multiple of 8
+  long skinheight;             // Height of <a href="qkspec_5.htm#MDS" target="content">skin texture</A>
+                               //           must be multiple of 8
+  long numverts;               // Number of <a href="qkspec_5.htm#MD2" target="content">vertices</A>
+  long numtris;                // Number of <a href="qkspec_5.htm#MD3" target="content">triangles</A> surfaces
+  long numframes;              // Number of <a href="qkspec_5.htm#MD4" target="content">frames</A>
+  long synctype;               // 0= synchron, 1= random
+  long flags;                  // 0 (see Alias models)
+  scalar_t size;               // average size of triangles
+} mdl_t;
+</PRE></P>
+
+<P>The size of this header is <TT>0x54</TT> bytes (84).</P>
+
+<H3>5.3.1 <A NAME="MDS">Alias Model Skins</A></H3>
+
+<P>The model skins are flat pictures that represent the texture that
+should be applied on the model. There can be more than one skin,
+though usually there is only one.</P>
+                 
+<H4>The structure of model skins</H4>
+
+<P> The structure of the skin is similar to the structure of 
+<a href="qkspec_6.htm#CSPRF" target="content">Sprites</A> textures.</P>
+
+<P>You will find the first skin just after the model header, at offset 
+<TT>baseskin = 0x54</TT>. There are <a href="qkspec_5.htm#MD0" target="content">numskins</A> skins to read.</P>
+
+<P>Each of these model skins is either a single picture (<B>type</B>=0) or a group 
+of pictures (</B>type</B>!=0).</P>
+
+<P>If the skin is made of a single picture, the structure is:
+<PRE>
+typedef struct
+{ long   group;                // value = 0
+  u_char skin[skinwidth*skinheight]; // the skin picture
+} skin_t;
+</PRE></P>
+
+<P>If the skin is made of a group of pictures, the structure is:
+<PRE>
+typedef struct
+{ long group;                  // value = 1
+  long nb;                     // number of pictures in group
+  float time[nb];              // time values, for each picture
+  u_char skin[nb][skinwidth*skinheight]; // the pictures 
+} skingroup_t;                                                 
+</PRE></P>
+
+<h4>The skin pictures</H4>
+
+<P>The skin pictures are a table of </b>u_char</b>, which represent an
+index in a color table. It is suspected that index 0xFF is not a color,
+but an indication of transparency.</P>
+                  
+<P>The width of skins must be a multiple of 4, to ensure long word alignement.</P>
+
+<P>Those pictures are usually made of at least two pieces: one is used
+for the front of the model, the other for the back of the model.</P>
+
+<P>Actually, there may be as many pieces as there are independent
+parts in the model. For instance, for the player, there are two pieces
+that defines the body, and two others that define the gun.</P>
+
+<P>Note that the back skin of a given model part must be on the
+<TT>same height</TT>, but translated <TT>width/2</TT>, relatively to
+the front skin part.  The back skin part must also be inverted
+along the vertical axis.</P>
+
+<P>This design is used to allow the correct rendering of a seamless
+skin texture, using <a href="qkspec_5.htm#MD2" target="content">Skin Vertices</A> with <TT>onseam
+== 0x20</TT>, on the skin border.</P>
+
+
+<H3>5.3.2 <A NAME="MD2">Alias Model Skin Vertices</A></H3>
+
+<P>A <TT>.MDL</TT> file is made of a list of vertices.  To each of
+these vertices corresponds a 3D position, a normal, and a position on
+the skin picture, for texture mapping.</P>
+
+<P>The list of skin vertices indicates only the position on texture
+picture, not the 3D position.  That's because for a given vertex, the
+position on skin is constant, while the position in 3D space varies
+with the animation.</P>
+
+<P>The list of skin vertices is made of these structures:
+<PRE>
+typedef struct
+{ long onseam;                 // 0 or 0x20
+  long s;                      // position, horizontally
+                               //  in range [0,skinwidth[
+  long t;                      // position, vertically
+                               //  in range [0,skinheight[
+} stvert_t;
+</PRE></P>
+
+<P><TT>s</TT> and <TT>t</TT> are (X,Y) position on the skin picture.</P>
+
+<P><TT>onseam</TT> is a flag, and if non zero it means that the
+vertex is on the boundary between the skin part that is applied on the
+front of the model, and the skin part that is applied on the back of
+the models (i.e. on the edge).</P>
+
+<P>If a vertex is <TT>onseam</TT>, but is part of a triangle that
+is on the back side of the model (<TT>facesfront</TT> is 0), then
+<TT><a href="qkspec_5.htm#MD0" target="content">skinwidth</A>/2</TT> must be added to <TT>s</TT>
+so as to find the actual value of <TT>s</TT>.</P>
+
+
+<P>The skin vertices are stored in a list, that is stored at offset
+offset <TT>baseverts = <a href="qkspec_5.htm#MDS" target="content">baseskin</A> + skinsizes</TT>:                                 
+<PRE>
+stvert_t vertices[numverts];
+</PRE></P>
+
+<P><TT>skinsizes</TT> is the sum of the size of all skin pictures.
+<UL>
+<LI>If they are all simple skins, then <TT>skinsize = (4 + 
+<a href="qkspec_5.htm#MD0" target="content">skinwidth</A> * <a href="qkspec_5.htm#MD0" target="content">skinheight</A>) * <A
+href="#MD0">numskins</A></TT>.<BR> 
+<LI>If there is a mix of simple skin and group skin, you have to
+decode it to find out where the vertex begin.
+</UL>
+
+
+<H3>5.3.3 <A NAME="MD3">Alias Model Triangles</A></H3>
+
+<P>An Alias Model is made of a set of triangle facets, with vertices
+at the boundaries. Triangles should all be valid triangles, not 
+degenerates (like points or lines).</P>
+
+<P>Only <a href="qkspec_5.htm#MD2" target="content">vertices</A> index are stored in triangles.
+the normal vector of the surface is reconstituted from the vertex
+position.</P>
+
+<P>Here is the structure of triangles:
+<PRE>
+typedef struct
+{ long facesfront;             // boolean
+  long vertices[3];            // Index of 3 triangle vertices
+                               // in range [0,numverts[
+} itriangle_t;
+</PRE></P>
+
+<P>Note that the index of a given vertex is the same in the <A
+HREF="#MD2">skin vertex</A> table and in the <a href="qkspec_5.htm#MD4" target="content">frame</A>
+table.</P>
+
+<P>At offset <TT>basetri = <a href="qkspec_5.htm#MD2" target="content">baseverts</A> + <A
+href="#MD0">numverts</A> * sizeof(stvert_t)</TT> in the <TT>.MDL</TT>
+file, you will find:
+<PRE>
+itriangle_t triangles[numtris];
+</PRE></P>
+
+<P>The boolean <TT>facesfront</TT> indicates if the triangle is part
+of the front or the back skin.  <TT>1</TT> means that it is on the
+front skin, <TT>0</TT> means that it is on the back skin.</P>
+<P>When the triangle is on the back skin, then any skin vertex that
+is on the skin seam (as indicated by <TT>onseam=1</TT>) must have
+it's <TT>s</TT> coordinate increased by 
+<TT><a href="qkspec_5.htm#MD0" target="content">skinwidth</A>/2</TT>.</P>
+
+<P>As a matter of fact, on the skin picture, the back skin is always
+situtated at the same level as the front skin, but moved by 
+<TT>skinwidth/2</TT> to the right (check this, with any model).</P>
+
+<P>The following code might make this easier to understand:
+<PRE>
+  for(j=0; j &lt; numtris; j++)
+  {
+    for(i=0; i &lt; 3 ; i++)
+    { 
+      vertex = triangles[j].vertices[i]
+      s = vertices[vertex].s;
+      t = vertices[vertex].t;
+      if( (vertices[vertex].onseam) && (!triangle[j].facesfront))
+      { 
+        s += skinwidth / 2;
+      }
+      /* use s and t as the coordinates of the vertex*/
+    }
+  }
+</PRE>
+</P>
+
+
+<H3>5.3.4 <A NAME="MD4">Alias Model Frames</A></H3>
+
+<P>An Alias Model contains a set of animation frames, which can be
+used in relation with the behavior of the modeled entity, so as to
+display it in various postures (walking, attacking, spreading its guts
+all over the place...).</P> 
+
+<P>This frame structure is rather complex to figure out, because:
+<UL>
+<LI> Frames can come standalone or in groups
+<LI> vertex posistion, in frames, are packed to save space.
+<LI> vertex normals are indicated by an index in a table.
+</UL>
+</P>
+     
+<H4>The frame vertices</H4>
+
+<P>Each frame vertex is defined by a 3D position and a normal for each
+of the <a href="qkspec_5.htm#MD2" target="content">vertices</A> in the model. </P>
+
+<P><PRE>
+typedef struct
+{ u_char packedposition[3];    // X,Y,Z coordinate, packed on 0-255
+  u_char lightnormalindex;     // index of the vertex normal
+} trivertx_t;
+</PRE></P>
+<P>To get the real X coordinate, from the packed coordinates, multiply
+the X coordinate by the X scaling factor, and add the X origin.  Both
+the scaling factor and the origin can be found in the <A
+HREF="#MD0">Model Header</A>.</P>
+
+<P>The formula for calculating positions is:
+<PRE>
+vec3_t position[i] = ( scale[i] *  packedposition[i] ) + origin[i]
+</PRE>
+Where <TT>scale</TT>, and <TT>origin</TT> can be found as vectors in
+the <a href="qkspec_5.htm#MD0" target="content">Model Header</A>.</P>
+
+<H4>The vertex normals</H4>
+
+<P>The <TT>lightnormalindex</TT> field is an index to the actual vertex
+normal vector. This vector is the average of the normal vectors of all 
+the faces that contain this vertex.<P>
+
+<P> This information is necessary to calculate the Gouraud shading of
+the faces, but actually a crude estimation of the actual vertex normal
+is sufficient. That's why, to save space and to reduce the number of
+computations needed, it has been chosen to approximate each vertex
+normal.</P>
+
+<P>The ordinary values of <TT>lightnormalindex</TT> are comprised
+between 0 and 161, and directly map into the index of one of the 162
+precalculated normal vectors that can be found in <A
+HREF="#APPB">Appendix B</A>.</P>
+
+<P>Value 255 is sometimes used in models, but this is a bug. Only values
+0 through 161 should be used.</P>
+       
+
+<H4>The simple frames</H4>
+
+<P>The simple frames can come standalone or in groups (see below). They always
+have the same structure:
+<PRE>
+typedef struct
+{ trivertx_t min;              // minimum values of X,Y,Z
+  trivertx_t max;              // maximum values of X,Y,Z
+  char name[16];               // name of frame
+  trivertx_t frame[numverts];  // array of vertices
+} simpleframe_t;
+</PRE>
+
+<P>The size of each simple frame is <TT>sizeframe = 0x18 + numverts *
+trivertx_t;</TT>.</P>
+
+<P>The number of vertices is <TT><a href="qkspec_5.htm#MD0" target="content">numverts</A></TT>, and
+to each of the vertex declared here corresponds a <a href="qkspec_5.htm#MD2" target="content">Skin
+Vertex</A> with the same index.</P>
+
+<P>The frame header contains two vertex definitions, <TT>min</TT> and
+<TT>max</TT>, that define a bounding box around the whole frame: all
+the other vertices must be inside that bounding box.</P>
+
+<P>However, that bounding box is only used for collision detection, so
+if you make it smaller than it should be the model will still display
+fine, but you can get very close to it before hitting it.</P>
+
+<P>To get the floating point values corresponding to <TT>min</TT> and
+<TT>max</TT>, treat them as if they were ordinary vertex
+positions.</P>
+
+<H4>The frames</H4>
+
+<P>These are the actual animation frames, made of a single frame, or a group
+of single frames, with timing indication.</P>
+
+<P>The beginning of the frames can be found in the <TT>.MDL</TT> file,
+at offset <TT>baseframes = <a href="qkspec_5.htm#MD3" target="content">basetri</A> + <A
+href="#MD0">numtris</A> * sizeof(itriangle_t);</TT>.</P>
+
+<P>Each frame must be read separately, since they may not have a constant size.
+</P>                                                     
+
+<P>If the frame is made of one simple frame:
+<PRE>                                      
+struct               
+{ long type;             // Value = 0
+  simpleframe_t frame;         // a single frame definition
+}
+</PRE></P>
+
+<P>If the frame is made of a group of simple frames:
+<PRE> 
+struct
+{ long type;                   // Value != 0
+  trivertx_t min;              // min position in all simple frames
+  trivertx_t max;              // max position in all simple frames
+  float time[nb]               // time for each of the single frames
+  simpleframe_t frames[nb];    // a group of simple frames
+}
+</PRE>                                                       
+
+
+
+
+<H2><FONT COLOR="#4F1F00">5.4 <A NAME="CMDLP">How to create Alias Models</A></FONT></H2>
+
+<p><i>This information from <a href="http://www.gamers.org/~rogue">Steve Tietze</a> 
+was obtained on AfterShock, a Web site animated by Joost Schuur.</i></p>
+
+<p>You can create an Alias model from the Alias <b>.TRI</b> files, using the
+quake utils released by id software, or from 3DS files, using a modified version
+of these tools. The exact usage of these tools is beyond the scope of this document.
+Note that the program Interchange y Senders can convert many file formats to <b>.TRI</b></p>
+
+<H3>5.4.1 Restriction on the geometry</H3>
+
+<p>The Alias model you will use as a basis for your Quake model must be a bit
+specific. You just can't use any 3D model as a basis:</b>
+<ul>
+<li> The model can <b>only</b> be made of triangles.<br>
+     Other kind of polygons are not accepted, and degenerate triangles will be eliminated.
+<li> The triangle face must be pointing toward the outside.<br>
+     Otherwise, the surface will never be displayed.
+<li> There should be around 300 triangles in the model, no more.<br>
+     Else the game engine may slow down. The least the better.<br>
+     Do not expect that automatic polygon reduction will help you.
+<li> The model scale should be in meter.
+</ul>
+
+<H3>5.4.2 Creating the skin</H3>
+
+<p>id software has a program called <b>texmake</b> that will take a model, and create
+an outline skin (with vertices and lines drawn, to help positioning) as a
+<b>.LBM</b> file.</p>
+<p>If your skin isn't showing up make sure your model scale is in meters.</p> 
+
+<p>Beware that you must use the same color palette as the game palette,
+otherwise the skin will look real strange.</p>
+
+<p>Another option would be to start from an existing skin and position all the
+skin vertices by hand: see the <b>MDL</b> tool, by Brian Martin.</p>
+
+<p>Note that <b>texmake</b> also indicates you the scale size of the object,
+an information that's needed.</p>
+
+
+
+<H3>5.4.2 Defining the frames of the object</H3>
+
+<p>The frames should be defined in a Quake C file, that will be processed.
+</p>
+
+<p>Once you have completed your quake c file its time to run it though model gen.
+Save the quake c file as <b>armor.qc</b>. 
+</p> 
+<p> Next step is to make 2 copies of your object.
+Name your object base.tri and armor.tri  The reason for this is that when
+your run the model gen it will look for base from the $base base file and 
+armor from the first frame of the armor in <b>$frame</b> armor.
+</p>
+<p>Once you have completed make sure that all these files are in one directory:
+<pre>
+base.tri
+armor.tri 
+skin.lbm
+armor.qc
+</pre>
+</p>
+<p>Then simply run modelgen armor.qc which will then create a armor.mdl file which quake reads
+when running the game.
+If you have done everything right you should now see a armor.mdl file in the same directory.
+</p>
+
+<p>Now the fun part.  Lets replace the your object with the armor icon in the game.
+</p>
+
+<P>There are a few things you need to know before you do this.  
+In the quake dir create a directory structure like <tt>id1</tt>. 
+</p>
+<p>Here is a break down of what you will need to make maps
+gfx and models.  Create these directories:
+<PRE>
+  test/
+  test/gfx/
+  test/progs/
+  test/maps/
+  test/sound/
+</PRE>
+</p>
+<p>Now assuming you have the  <b>registered</b> version and did not pirate this version you can go on then.
+damn you to hell if you didn't buy this.</p>
+
+<P>Copy your <b>armor.mdl</b> file into <tt>test/progs/</tt> dir. 
+Then run quake with these command parameters.
+<pre>
+quake -game test 
+</pre>
+This will bring you into quake and it should replace all the armor icons with your object icon.
+</p>
+
+<p><b>T<font size=-1>HINGS TO</font> K<font size=-1>EEP IN</font> M<font size=-1>IND</font>:</b>
+</p>
+<p>
+<ul>
+<li> Objects HAVE to be triangles.
+<li> When creating the skin keep in mind the game palette or things will look psychedelic :)
+</ul>
+</p>
+
+<p><b>T<font size=-1>ROUBLESHOOTING:</font></b></p>
+
+<p>If texmake or modelgen doesn't seem to work or hang then there is a problem with your object.
+There are several reasons for this:
+<ol>
+<li> You could have a non-triangle polygon in your object.
+<li> You could have repeated points that wernt deleted.
+<li> Scale of your object could be wrong.  Meters has best output.
+</ol>
+</p>
+
+<p>That's it for now.. if you have any questions email <a href="mailto:gateway@rogue-ent.com">gateway@rogue-ent.com</a>.<br>
+Steve Tietze (Rogue Entertainment)
+</p>
+
+
+
+
+<HR SIZE=3>
+</BODY></HTML>

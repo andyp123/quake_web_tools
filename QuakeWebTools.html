@@ -24,10 +24,10 @@
     <script src="QuakeWebTools/scripts/quakewebtools.js"></script>
   </head>
 
-  <body onload="app_init()">
+  <body onload="app_init()" style="width: 500px">
 
     <article>
-      <div id="holder" class="filedrop" style="width: 600px; height: 100px">
+      <div id="holder" class="filedrop" style="height: 100px">
         <p>DROP FILES HERE</p>
       </div> 
       <p id="status">File API and FileReader API not supported</p>
@@ -35,7 +35,7 @@
       pal) into the area above to load their content in your browser.</p>
     </article>
 
-    <div id="file-content" style="width: 600px; border:0">
+    <div id="file-content" style="border:0">
     </div>
 
   </body>
@@ -79,15 +79,17 @@ holder.ondrop = function (e) {
       loadPAK(filename, arraybuffer);
       break;
     case "wad":
-      var wad = file_entry.obj;//new QWT.WAD(filename, arraybuffer);
-      QWT.ImageUtil.generateHTMLPreview(wad.directory, wad.ab, QWT.DEFAULT_PALETTE, "file-content");    
+      var wad = file_entry.obj;
+      QWT.ImageUtil.generateHTMLPreview({image_infos: wad.directory, arraybuffer: wad.ab},
+          QWT.DEFAULT_PALETTE, "file-content");    
       break;
     case "bsp":
-      var bsp = file_entry.obj;//new QWT.BSP(filename, arraybuffer);
-      QWT.ImageUtil.generateHTMLPreview(bsp.miptex_directory, bsp.ab, QWT.DEFAULT_PALETTE, "file-content");
+      var bsp = file_entry.obj;
+      QWT.ImageUtil.generateHTMLPreview({image_infos: bsp.miptex_directory, arraybuffer: bsp.ab},
+          QWT.DEFAULT_PALETTE, "file-content");
       break;
     case "spr":
-      var spr = file_entry.obj;//new QWT.SPR(filename, arraybuffer);
+      var spr = file_entry.obj;
       break;
     case "lmp":
       var image_data = QWT.ImageUtil.getImageData(filename, arraybuffer);
@@ -100,6 +102,8 @@ holder.ondrop = function (e) {
       document.getElementById("file-content").appendChild(img);
       break;
     case "mdl":
+      var mdl = file_entry.obj;
+      QWT.ImageUtil.generateHTMLPreview({image_datas:mdl.skins}, QWT.DEFAULT_PALETTE, "file-content");
       break;
     default:
       var msg = "File type not supported (" + file_entry.type + ")";

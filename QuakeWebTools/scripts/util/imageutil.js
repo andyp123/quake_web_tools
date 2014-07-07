@@ -114,6 +114,25 @@ QuakeWebTools.ImageUtil.getImageData = function(name, arraybuffer, entry) {
 }
 
 /**
+* Convert an array of image info (BSP, WAD) items and converts them into image
+* data by extracting it from a file lump.
+* @param {Array} image_infos The array of image info objects.
+* @param {ArrayBuffer} arraybuffer The binary lump containing the image data.
+* @return {Array} An array of image data objects.
+* @static
+*/
+QuakeWebTools.ImageUtil.getImageDatas = function(image_infos, arraybuffer) {
+  var IU = QuakeWebTools.ImageUtil;
+  var image_datas = [];
+
+  for (var i = 0; i < image_infos.length; ++i) {
+    var image_info = image_infos[i];
+  }
+
+  return image_datas;
+}
+
+/**
 * Converts image data in the form { name, width, height, pixels, pixel_type } to an image
 * using a data URL that can be displayed in browsers.
 * @param {QuakeImageData} image_data The image data to expand.
@@ -178,33 +197,48 @@ QuakeWebTools.ImageUtil.expandImageData = function(image_data, palette, mip_leve
   return img;
 }
 
+
+
 /**
 * Takes an array of image information, loads the images and attaches them to the
 * current page's body element, or a specified element on the page.
-* @param {Array} image_directory Array of image directory entries.
-* @param {ArrayBuffer} arraybuffer The binary lump containing the image data.
+* The format of the images parameter is:
+*  images = {
+*    image_infos: []
+*    image_datas: []
+*    arraybuffer: ArrayBuffer
+*  }
+* @param {Array} images An object containing an array of image_infos and an arraybuffer or an array of image_datas
 * @param {PAL} palette A palette for converting image data to RGB.
 * @param {String} element_id The id of a DOM element in the current document.
 * @static
 */
-QuakeWebTools.ImageUtil.generateHTMLPreview = function(image_directory, arraybuffer, palette, element_id) {
-  var fragment = new DocumentFragment();
+QuakeWebTools.ImageUtil.generateHTMLPreview = function(images, palette, element_id) {
   var IU = QuakeWebTools.ImageUtil;
+  var fragment = new DocumentFragment();
 
-  for (var i = 0; i < image_directory.length; ++i) {
-    var entry = image_directory[i];
-    var image_data = IU.getImageData(entry.name, arraybuffer, entry);
+  var image_datas = images.image_datas || null;
+  var image_infos = images.image_infos || null;
+  var arraybuffer = images.arraybuffer || null;
+  var limit = (image_datas) ? image_datas.length : image_infos.length;
+
+  for (var i = 0; i < limit; ++i) {
+    if (image_datas) {
+      var image_data = image_datas[i];
+    } else {
+      var image_info = image_infos[i];
+      var image_data = IU.getImageData(image_info.name, arraybuffer, image_info);
+    }
     var img_info = " (" + image_data.width + "x"
-                        + image_data.height + ", "
-                        + entry.size + " bytes)";
+                        + image_data.height + ")";
     var img = IU.expandImageData(image_data, palette);
-    img.title = entry.name + img_info;
-    img.download = name + ".png"; // seems to have no effect...
+    img.title = image_data.name + img_info;
+    //img.download = name + ".png"; // seems to have no effect...
 
     var div = document.createElement("div");
     div.className = "item-box";
     div.appendChild(img);
-    div.innerHTML += "<br><span class='item-name'>" + entry.name
+    div.innerHTML += "<br><span class='item-name'>" + image_data.name
                    + "</span><span class='item-info'>" + img_info
                    + "</span><hr class='item-divider'>";
     fragment.appendChild(div);

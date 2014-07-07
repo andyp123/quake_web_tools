@@ -1,0 +1,135 @@
+<HTML><HEAD>
+<TITLE>Quake Specs v3.3</TITLE>
+<LINK REV="MADE" HREF="mailto:Olivier.Montanuy@wanadoo.fr">
+</HEAD>  
+<BODY BGCOLOR="#FFFFFF">
+
+<H1><FONT COLOR="#007F00">7. <A NAME="CWAD0">The WAD2
+files</A></FONT></H1>
+
+<P>The WAD2 format is only used for the graphic <TT>.WAD</TT>, that
+stores general information like the palette and the status bar
+items.</P>
+
+<P>It is believed that this format was the original distribution file
+intended for Quake, but since then id Software probably realised they
+needed a file format that allowed a more direct mapping of their
+development directories, so they chose the PACK format instead.</P>
+
+
+<H2><FONT COLOR="#4F1F00">7.1 <A NAME="CWADF">The format of WAD2
+files</A></FONT></H2>
+
+<P>The structure of the WAD2 files is almost exactly the same as that
+of DOOM's PWAD and IWAD files.  Only the size of the directory entries
+is a bit different.</P>
+
+
+<H3>7.1.1 The WAD2 file header</H3>
+
+<P><PRE>
+typedef struct
+{ u_char magic[4];             // "WAD2", Name of the new WAD format
+  long numentries;             // Number of entries
+  long diroffset;              // Position of WAD directory in file
+} wadhead_t;
+</PRE></P>
+
+<H3>7.1.2 The WAD directory</H3>
+
+<P>The entries in the WAD2 directory are a bit bigger than in PWAD and
+IWAD:
+<PRE>
+typedef struct
+{ long offset;                 // Position of the entry in WAD
+  long dsize;                  // Size of the entry in WAD file
+  long size;                   // Size of the entry in memory
+  char type;                   // type of entry
+  char cmprs;                  // Compression. 0 if none.
+  short dummy;                 // Not used
+  char name[16];               // 1 to 16 characters, '\0'-padded
+} wadentry_t;
+</PRE></P>
+
+<P>At offset <TT>diroffset</TT> in file, you will find the WAD
+directory itself:
+<PRE>
+wadentry_t dir[numentries];        // like in DOOM
+</PRE></P>
+
+<P>This directory then contains pointers to all the entries in the
+WAD2 file, and like with PACK file there can be large amounts of
+unused data, if one is not careful enough when building WAD2
+files.</P>
+
+<H3>7.1.3 Determining the type of directory entries</H3>
+
+<P>The field <TT>type</TT> in the directory identifies the entry.
+It's a single byte, which give 256 possibilities.  Only 3 are
+currently used.</P>
+
+<PRE><TABLE BORDER><TR><TD><TABLE>
+<TR VALIGN=TOP><TD><TT>0x40</TT>=  </TD><TD>'@'=  </TD><TD>Color Palette</TD></TR>
+<TR VALIGN=TOP><TD><TT>0x42</TT>=  </TD><TD>'B'=  </TD><TD>Pictures for status bar</TD></TR>
+<TR VALIGN=TOP><TD><TT>0x44</TT>=  </TD><TD>'D'=  </TD><TD>Used to be Mip Texture</TD></TR>
+<TR VALIGN=TOP><TD><TT>0x45</TT>=  </TD><TD>'E'=  </TD><TD>Console picture (flat)</TD></TR>
+</TABLE></TD></TR></TABLE></PRE>
+
+
+<H2><FONT COLOR="#4F1F00">7.2 <A NAME="CWADS">Format of status bar
+pictures</A></FONT></H2>
+
+<P>The pictures will probably used for everything concerning the
+status bar (animations, numbers, ...).  They are not used for sprites,
+countrary to DOOM.</P>
+
+<P>These files are just like DOOM flats, but with a header to indicate
+width and height.
+<PRE>
+typedef struct
+{ long width;                  // Picture width
+  long height;                 // Picture height
+  u_char Pixels[height][width]
+} pichead_t;
+</PRE></P>
+
+
+<H2><FONT COLOR="#4F1F00">7.3 <A NAME="CWADC">Format of console
+lumps</A></FONT></H2>
+
+<P>The console lumps are just flat pictures, similar to DOOM flats,
+without any formatting, and using one byte per pixel.  The color
+palette is that of the PALETTE lump.</P>
+
+<P>The console background:
+<PRE>
+char  Screen [200][320];       //This means it's a 320x200 array
+</PRE>
+The console characters:
+<PRE>
+char  CChars [128][128];       //This means it's a 128x128 array
+</PRE></P>
+
+<H2><FONT COLOR="#4F1F00">7.4 <A NAME="CWADP">Format of
+Palettes</A></FONT></H2>
+
+<P>All the pictures, textures, sprites and Alias model skins use color
+indexes in a 256-color table, and it can be expected that only a
+limited set of color palettes will be used.  Maybe just one.  At
+least, it's pretty sure that there is only one color palette for all
+the textures.</P>
+
+<P>This format is Exactly the same as in DOOM:
+<PRE>
+struct RGB {char R; char G; char B;} Palette[256];
+</PRE>
+Internally, the color palette is translated into a much bigger
+structure, that takes into account the light level, just like in DOOM.
+This structure depends on the number of colors available on the
+display, so it might be calculated by the engine at startup.</P>
+
+
+
+
+<HR SIZE=3>
+</BODY></HTML>

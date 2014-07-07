@@ -1,0 +1,192 @@
+<HTML><HEAD>
+<TITLE>Quake Specs v3.3</TITLE>
+<LINK REV="MADE" HREF="mailto:Olivier.Montanuy@wanadoo.fr">
+</HEAD>  
+<BODY BGCOLOR="#FFFFFF">
+
+<H1><FONT COLOR="#007F00">1. <A NAME="CINT0">Introduction </A></FONT></H1>
+
+
+
+<H2><FONT COLOR="#004F1F">1.1 <A NAME="CINTL">Legal Warning</A></FONT></H2>
+
+<FONT COLOR="#4F1F00">
+<P><B>Quake</B> and <B>Doom</B> are trademarks of <B>id Software
+Inc.</B>, Mesquite, Texas.  This document is <EM>not</EM> a
+publication of id Software, who should not be associated with it.  id
+Software will not answer any questions related to this document.</P>
+</FONT>
+
+<P ALIGN=CENTER>This document is Copyright (C) 1996 by Olivier
+Montanuy.<BR>All rights reserved.</P>
+
+<FONT COLOR="#004F1F">
+<P>Permission to use, copy and distribute unedited copies of this
+whole document is hereby granted, provided that no fee is charged for
+the use or availability of this document (other than the normal
+connection costs for on-line services, if applicable).  The above
+copyright notice and this permission notice must be left intact in all
+copies of this document.  Short excerpts of this document may be
+quoted in discussion groups or mailing list articles, as long as a
+reference to the full document is given.</P>
+
+<P>Commercial distribution of this document, in whole or in part,
+requires prior agreement with the author.  Commercial distribution
+includes any means by which the user has to pay either for the support
+(e.g. book, newsletter or CD-ROM) or for the document itself.
+Unauthorized commercial distribution is prohibited.</P>
+</FONT>
+
+<P><B>Disclaimer:</B> this document describes the Quake file formats
+as we understand them, but we cannot guarantee that anything is
+correct.  In fact, we could be totally wrong.  We cannot be held
+responsible for any consequences of the use or misuse of the
+information contained herein.  You have been warned.</P>
+
+
+
+<HR>
+<H2><FONT COLOR="#004F1F">1.2 <A NAME="CINTT">Thanks</A></FONT></H2>
+
+<P><B>A lot of thanks to:</B>
+<UL>
+<LI> <B>John Carmack</B> and <B>Mike Abrash</B> of id Software, for the 
+  sources of the Quake utility.
+<LI> <B>Jay Wilbur</B> of id Software, for tolerating all that Quake
+  hacking madness, and keeping his lawyers tame.
+<LI> The Vandals and Cavemens, for feats best not described.
+<LI> <B>Bernd Kreimeier</B> for proofreading and handling
+     all the mess caused by the specs.
+<LI> <B>Jens Hykkelbjerg</B> for help with 3D and HTML.
+<LI> <B>Frans P. de Vries</B> for his suggestions and for proofreading.
+<LI> <B>Tony Myles</B> for corrections to the formula for PVS decoding.
+<LI> <B>Luc Cluitmans</B> for some insights with the code.
+<LI> <B>John Williston</B> for the motivation.
+<LI> <B>Joost Schuur</B> and the Quake Talk guys for all those rumors<BR>
+  (some of which were really helpful).
+<LI> All those who reported bugs in previous specs.
+</UL>
+</P>
+
+
+<P><B>Contributors to this document:</B>
+<UL>
+<LI> <B><a HREF="mailto:Olivier.Montanuy@wanadoo.fr">Olivier Montanuy</a></B>
+     (Bsp models, network, various stuff)<BR>
+     (Author of WinTex and Quake-C specs)
+<LI> <B>Brian <I>ZombyWoof</I> Martin</B> (Alias models).<BR>
+     (Author of the MedDLe Alias model viewer for Quake)
+<LI> <B>Rapha&euml;l Quinet</B> (Sprite models, HTML layout).<BR>
+     (Main author of DEU and QEU, the Doom and Quake Editing Utilities)
+<LI> <B>John Wakelin</B> and <B>Mike Bond</B> (definition of entities)
+<LI> <B>Nicholas <I>Niklata</I> Dwarkanath</B> (MAP information, entity list and samples).<BR>
+<LI> <B>David Etherton</B> (visibility lists, surfaces).
+<LI> <B>Stephen Crowley</B> (checking of texture animations).
+<LI> <B>Rene Post</B> and <B>Jim Butcher</B> (help with models).
+</UL>
+</P>
+
+<HR>
+
+<H2><FONT COLOR="#004F1F">1.3 <A NAME="CINTA">A word from the
+authors</A></FONT></H2>
+
+<P>This document is an updated version of the Unofficial Quake Specs
+3.1, adapted for the Quake Shareware release. This release is not compatible
+with the previous Quake Test1 release. The .BSP and .MDL file formats have
+changed.</P>
+
+<P>Though this document is largely the result of hacking, it has been checked
+against the C code of the Quake utility. Some details could not be guessed by hacking.
+But the C code is so... special, that it's sometime easier to look at the bytes.
+</P>
+
+<P>You will need some working knowledge of 3D geometry to understand
+this specification, and a good deal of patience too, because some
+(if not all) explanations may not be crystal clear.</P>
+
+<FONT COLOR="#FF0000">
+<P>Please <EM>do not</EM> make any full-featured editor working with
+the Quake shareware release.</P>
+</FONT>
+
+<P>Last, if you enjoyed editing Quake, don't forget to support <B>id
+Software</B> and to buy their products. Help feed <B>John</B> and
+<B>Mike</B> as they work on the next generation game engine!</P>
+
+<P>The authors.</P>
+
+<HR>
+
+<H2><FONT COLOR="#004F1F">1.4 <A NAME="CINTM">For more informations</A></FONT></H2>
+
+<H3>1.4.1 How to get the last version of the specifications?</H3>
+
+<P>The latest version of this document will always be available on the official Quake-editing support site,
+<A HREF="http://www.gamers.org/dEngine/quake/spec/qspec-current.html">http://www.gamers.org/dEngine/quake/spec/qspec-current.html</A>.
+</P>
+
+<P>You will also find it at the following locations:
+<UL>
+<LI><A HREF="http://www.stud.montefiore.ulg.ac.be/ftp-mirror/quake/docs/">http://www.stud.montefiore.ulg.ac.be/ftp-mirror/quake/docs/</A><BR> (filename: <TT>qkspec??.html</TT>)
+<LI><A HREF="http://ftp.cdrom.com/pub/idgames2/docs/">http://ftp.cdrom.com/pub/idgames2/docs/</A><BR> (in ZIP format, filename: <TT>qkspec??.zip</TT>).
+</UL>
+</P>
+
+<P>Other sites will also have a copy of this document (according to
+the <a href="qkspec_1.htm#CINTL" target="content">distribution rights</A> stated above) but we
+cannot guarantee that those sites will have the most recent version.
+Usually, we upload the new versions on <A HREF="http://www.stud.montefiore.ulg.ac.be/ftp-mirror/quake/docs/">www.stud.montefiore.ulg.ac.be</A>
+first, then on the other sites on the same day.</P>
+
+<H3>1.4.2 Informations about 3D rendering</H3>
+<UL>
+<LI>The <A HREF="http://www.gamers.org/dEngine/">Difference Engine</A> home page.
+<LI><A HREF="http://www.cs.tu-berlin.de/~ki/info/3dgpl.html">3DGPL</A>, a tutorial for 3D drawing functions, by Sergei Savchenko.
+<LI>The list of <A HREF="http://www.cs.tu-berlin.de/~ki/engines.html">3D game</A> engines.
+<LI>the source of the Quake utilities.
+</UL>
+
+<H3>1.4.3 Cool Quake related pages</H3>
+<UL>
+<LI><A HREF="http://www.idsoftware.com/qss.html">id software</A>
+<LI><A HREF="http://www.stomped.com/">Stomped</A>
+<LI><A HREF="http://www.infi.net/~nichd/quake.html">Niklata's</A>'s Quake editing page.
+<LI><A HREF="http://www.daimi.aau.dk/~hykkelbj/quake/index.html">Jens</A>'s Quake page.
+<LI><A HREF="http://www.pennet.com/drsleep/quake.htm">Dr Sleep</A>'s Quake page.
+<LI><A HREF="http://sh1.ro.com/~rgoodwin/quake.html">Robert's</A> Quake page.
+<LI><A HREF="http://www.islandnet.com/~ccaird/idgames/quake/quake.html">Colin</A>'s Quake page.
+<LI><A HREF="http://www.hal-pc.org/~jasonv/quake/">Jason</A>'s Unofficial Quake Homepage.
+<LI><A HREF="http://www.net-link.net/~joedery/quake.htm">Joe</A>'s Quake Stuff and links.
+<LI><A HREF="http://www.montefiore.ulg.ac.be/~quinet/games/editing.html">Rapha&euml;l's</A> game editing page.
+</UL>
+
+<H3>1.4.5 Newsgroups</H3>
+<UL>
+<LI><A HREF="news:rec.games.computer.quake.announce">rec.games.computer.quake.announce</A>, Info/FAQ/Announcements about Quake. (Moderated)
+<LI><A HREF="news:rec.games.computer.quake.editing">rec.games.computer.quake.editing</A>, <B>Editing and hacking Quake-related files</B>.
+<LI><A HREF="news:rec.games.computer.quake.misc">rec.games.computer.quake.misc</A>, General discussion of Quake.
+</UL>
+
+
+<HR>
+
+<H2><FONT COLOR="#004F1F">1.5 <A NAME="CINTC">Typing conventions</A></FONT></H2>
+
+<P>All the code structures are written in <B>C</B>, because C is all
+we talk.  Well, it could have been worse.  We could have written that
+specification in <EM>French</EM>.</P>
+
+<PRE>
+0xABCD   = <B>hexadecimal</B> number ABCD, in C convention.
+char     = <B>8 bit</B> signed integer,
+u_char   = <B>8 bit</B> unsigned integer (BYTE),
+short    = <B>16 bit</B> signed integer,
+u_short  = <B>16 bit</B> unsigned integer (WORD),
+long     = <B>32 bit</B> signed integer,
+u_long   = <B>32 bit</B> unsigned integer (DWORD),
+float    = <B>32 bit</B> single precision real (floating point).
+</PRE>
+
+<HR SIZE=3>
+</BODY></HTML>

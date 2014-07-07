@@ -1,0 +1,1103 @@
+<HTML><HEAD>
+<TITLE>Quake Specs v3.3</TITLE>
+<LINK REV="MADE" HREF="mailto:Olivier.Montanuy@wanadoo.fr">
+</HEAD>  
+<BODY BGCOLOR="#FFFFFF">
+<H1><FONT COLOR="#007F00">4. <A NAME="CBSP0">Level Map Models</A></FONT></H1>
+<H2><FONT COLOR="#4F1F00">4.1 <A NAME="CBSPG">Description of .BSP Files</A></FONT></H2>
+
+<H3>4.1.1 General description of level BSP Maps</H3>
+
+<P>The BSP maps are meant to be generated automatically. They are described
+here only for the purpose of helpin you write a BSP generation tool.
+If you are only interested in building Quake editors, please read the 
+description of <a href="qkspec_2.htm#CMFMF" target="content">Level Maps</A> instead.</P>
+
+<P>The level BSP maps are stored in files with extension <TT>.BSP</TT> (for
+Binary Space Partition Tree).  Those files need not necessarily contain
+level maps, they can also contain the definition of any entity that is
+not supposed to be modified during game play.</P>
+
+<P>Since a BSP based model requires the calculation of a BSP tree, and
+this calculation is tedious, these models are not used to store
+definitions of monsters, players, or anything that can change shape
+during game play.  But you could use them for a model of a big rock,
+because that rock isn't gonna be modified...</P>
+
+<P>Moreover, there are no frames associated to a BSP based model,
+contrary to what happens for Alias models: it's just one single big
+frame.  So you cannot animate them.</P>
+
+<H3>4.1.2 Description of the contents of .BSP files</H3>
+
+<P>The .BSP files contain all the information that is needed to
+display a level correctly, for the obvious reason that those files are
+meant to be distributed individually, or associated in multi-level
+maps without causing trouble.  In DOOM, you had to take care that all
+the needed textures were available.  Now, the textures are in the level
+itself.</P>
+
+<P>One disadvantage of that format is that, contrary to DOOM, you
+cannot have a single set of textures for all your levels, or re-use
+textures in another level.  Now guess why Quake will come on
+CD-ROM.</P>
+
+
+<P>Here are the contents of levels:
+<OL>
+<LI> A list of entities that are present in the level.
+<LI> A description of the level map, in term of faces, edges, vertices,
+    and textures on the faces. Actually, there might be more faces
+         than really needed, because of the BSP tree that splits them.
+<LI> Some <B>enormous</B> amount of data to accelerate the rendering
+   of levels, and which must be calculated off-line: a set of planes,
+        models, BSP nodes, clip nodes, BSP leaves,
+        visibility lists, and edge lists, face lists.
+</OL>
+</P>
+
+<P>The format of level is pretty complicated, don't be disappointed if
+you don't understand everything on first try.  Maybe you can imagine
+how hard it has been to hack it out of the BSP map.</P>
+
+
+
+<HR>
+
+<H2><FONT COLOR="#4F1F00">4.2 <A NAME="CBSPF">The Format of BSP files</A></FONT></H2>
+
+<P>Beware: the description below is valid only for the version <TT>0x1C</TT>
+of the BSP file format, used in Quake Shareware version, 22 June 96.
+Previous version of Quake used different formats. Future versions might 
+differ again.</P>
+
+<P>A BSP file starts with some sort of directory, of fixed size.  As a
+matter of fact, the entries in a BSP file are always at the same place
+in the directory.</P>
+
+<P>Here is the description of one directory entry:
+<PRE>
+typedef struct                 // A Directory entry
+{ long  offset;                // Offset to entry, in bytes, from start of file
+  long  size;                  // Size of entry in file, in bytes
+} dentry_t;
+</PRE>
+Here is the BSP header itself, made of a version tag, and 15 entries:
+<PRE>
+typedef struct                 // The BSP file header
+{ long  version;               // Model version, must be <TT>0x17</TT> (23).
+  dentry_t entities;           // List of <a href="qkspec_4.htm#BL0" target="content">Entities</A>.
+  dentry_t planes;             // Map <a href="qkspec_4.htm#BL1" target="content">Planes</A>.
+                               // numplanes = size/sizeof(plane_t)
+  dentry_t miptex;             // Wall <a href="qkspec_4.htm#BL2" target="content">Textures</A>.
+  dentry_t vertices;           // Map <a href="qkspec_4.htm#BL3" target="content">Vertices</A>.
+                               // numvertices = size/sizeof(vertex_t)
+  dentry_t visilist;           // Leaves <a href="qkspec_4.htm#BL4" target="content">Visibility</A> lists.
+  dentry_t nodes;              // <a href="qkspec_4.htm#BL5" target="content">BSP Nodes</A>.
+                               // numnodes = size/sizeof(node_t)
+  dentry_t texinfo;            // <a href="qkspec_4.htm#BL6" target="content">Texture Info</A> for faces.
+                               // numtexinfo = size/sizeof(texinfo_t)
+  dentry_t faces;              // <a href="qkspec_4.htm#BL7" target="content">Faces</A> of each surface.
+                               // numfaces = size/sizeof(face_t)
+  dentry_t lightmaps;          // Wall <a href="qkspec_4.htm#BL8" target="content">Light Maps</A>.
+  dentry_t clipnodes;          // <a href="qkspec_4.htm#BL9" target="content">clip nodes</A>, for Models.
+                               // numclips = size/sizeof(clipnode_t)
+  dentry_t leaves;             // <a href="qkspec_4.htm#BLA" target="content">BSP Leaves</A>.
+                               // numlaves = size/sizeof(leaf_t)
+  dentry_t lface;              // List of <a href="qkspec_4.htm#BLB" target="content">Faces</A>.
+  dentry_t edges;              // <a href="qkspec_4.htm#BLC" target="content">Edges</A> of faces.
+                               // numedges = Size/sizeof(edge_t)
+  dentry_t ledges;             // List of <a href="qkspec_4.htm#BLD" target="content">Edges</A>.
+  dentry_t models;             // List of <a href="qkspec_4.htm#BLE" target="content">Models</A>.
+                               // nummodels = Size/sizeof(model_t)
+} dheader_t;
+</PRE></P>
+
+<P>All the offsets are counted from the start of the BSP files.  The
+size can be 0, if the entry is not present.  It must not be
+negative.</P>
+
+<H3><A NAME="BLM">Basic data types</A></H3>
+
+<P>Before we start with the level entry structure, you will need to
+understand the following data types:
+<PRE>
+typedef float scalar_t;        // Scalar value,
+
+typedef struct                 // Vector or Position
+{ scalar_t x;                  // horizontal
+  scalar_t y;                  // horizontal
+  scalar_t z;                  // vertical
+} vec3_t;
+
+typedef struct                 // Bounding Box, Float values
+{ vec3_t   min;                // minimum values of X,Y,Z
+  vec3_t   max;                // maximum values of X,Y,Z
+} boundbox_t;
+
+typedef struct                 // Bounding Box, Short values
+{ short   min;                 // minimum values of X,Y,Z
+  short   max;                 // maximum values of X,Y,Z
+} bboxshort_t;
+</PRE></P>
+
+<P><TT>scalar_t</TT> is a scalar value, that is used to represent X,Y,Z
+coordinates, or distances.  It is a 32bit, single precision floating
+point number, and it can be expected that in later version it will be
+replaced by some fixed point number, as is typical in DOS games
+(because the floating point unit of Intels just amazingly sucks).</P>
+
+<P><TT>vec3_t</TT> is a 3D vector, that is used to represent either 3D
+position in space, or vectors normal to planes.  Usually, 3D positions
+in space will be integer values, though they are coded in floating
+point.  Maybe a hint that the final engine will work only with integer
+of fixed point values, like DOOM did.</P>
+
+<P><TT>boundbox_t</TT> is a set of two vec3_t, that represents a
+bounding box in 3D space.  The first vec3_t stores the minimum values,
+the second one stores the maximum values.  These bounding boxes, though
+less elegant than a center point and a distance, allow for greater
+processing speed.</P>
+
+
+<P><TT>bboxshort_t</TT> is a set of six short integer, that represent 
+a condensed form of boundbox_t, the ordinary bounding box.</P>
+
+
+<HR>
+
+
+<H2><FONT COLOR="#4F1F00">4.3 <A NAME="CBSPL">Level layout definition</A></FONT></H2>
+
+<P>The basic level entries are those that define the geometrical
+structure of the level; i.e. those are the only ones a level editor
+should ever bother about.</P>
+
+<P>Actually, this is not totally true, because those entries are
+intricately related to the BSP tree format, so an intermediate format
+shall be used, before calculating the <a href="qkspec_4.htm#CBSPN" target="content">BSP tree</A>
+and the <a href="qkspec_4.htm#CBSPC" target="content">pre-calculated</A> entries.</P>
+
+
+<H3>4.3.1 <A NAME="BLE">The Definitions of Models</A></H3>
+
+<P><I>The name Model refers here to either a big zone, the level, or
+smaller independent parts inside that zone, like the grid bars on
+level TEST1, that open with a push on the switch.</I></P>
+
+<P>The level map is divided in one or more Models, which are
+independent areas, roughly bounded by two sets of <a href="qkspec_4.htm#BL9" target="content">Clip Nodes</A>,
+and organised internally around a <a href="qkspec_4.htm#BL5" target="content">BSP Tree</A>, that
+contains the <a href="qkspec_4.htm#BLA" target="content">BSP Leaves</A>, which are the actual areas
+where entities can be found (like the sectors in DOOM).</P>
+
+<P><PRE>
+typedef struct
+{ boundbox_t bound;            // The bounding box of the Model
+  vec3_t origin;               // origin of model, usually (0,0,0)
+  long node_id0;               // index of first <a href="qkspec_4.htm#BL5" target="content">BSP node</A>
+  long node_id1;               // index of the first <a href="qkspec_4.htm#BL9" target="content">Clip node</A>
+  long node_id2;               // index of the second <a href="qkspec_4.htm#BL9" target="content">Clip node</A>
+  long node_id3;               // usually zero
+  long numleafs;               // number of <a href="qkspec_4.htm#BLA" target="content">BSP leaves</A>
+  long face_id;                // index of <a href="qkspec_4.htm#BL7" target="content">Faces</A>
+  long face_num;               // number of <a href="qkspec_4.htm#BL7" target="content">Faces</A>
+} model_t;
+</PRE></P>
+
+<H4>About the Models</H4>
+
+<P>The first model is the whole level itself.
+The other models, smaller, represent door, switches, bars, that might
+move around the level. </P>
+
+<P>A typical BSP model is only made of one single model, and only the
+level maps may eventually need more than one model.<BR>
+
+<H4>About the different fields</H4>
+
+<P>The <TT>numleafs</TT> field is the number of leaves in the BSP tree.
+It is used to determine how much room each  <a href="qkspec_4.htm#BL4" target="content">visilists</A> 
+requires when decompressed (better not put a wrong number there).</P>
+
+<P>The <TT>node_id</TT> field is an index to the first node of the
+BSP tree that splits the model. 
+</P>
+
+<P>The <TT>bnode_id</TT> and <TT>bnode_id2</TT> field is an index to the 
+first node of two BSP tree that are used for early collision detection.
+There used to be only one of these trees. The purpose of the second
+tree is unknown (maybe it's not for collision detection after all).
+</P>
+
+<P>The <TT>face_id</TT> and <TT>face_num</TT> fields refer to
+all the consecutive faces in the <a href="qkspec_4.htm#BL7" target="content">face list</A>
+that belong to a given model.</P>
+
+
+
+
+
+
+<H3>4.3.2 <A NAME="BL3">List of Vertices</A></H3>
+
+<P>The vertices definitions are used for <a href="qkspec_4.htm#BLC" target="content">Edges</A>,
+which are part of <a href="qkspec_4.htm#BL7" target="content">faces</A>.</P>
+
+<P>The order of vertices in the list is irrelevant.
+<PRE>
+typedef struct
+{ float X;                    // X,Y,Z coordinates of the vertex
+  float Y;                    // usually some integer value
+  float Z;                    // but coded in floating point
+} vertex_t;
+</PRE></P>
+
+<P>The vertices are only used for texture mapping.</P>
+
+<P>There must be only one given vertex definition, for any point in 3D
+space.</P>
+
+
+<H3>4.3.3 <A NAME="BLC">The Edges</A></H3>
+
+<P>This structure stores a list of pairs of indexes of vertices, each
+pair defining an edge of a face.  That edge will generally be used
+by more than one face (two or three is typical).</P>
+
+<P>Edges are referenced in <a href="qkspec_4.htm#BLD" target="content">List of edges</A>, that
+represent the actual list of edges contained in each 
+<a href="qkspec_4.htm#BL7" target="content">face</A>. The edges are not directly referenced
+in faces, otherwise the face structure could not have
+a fixed size.</P>
+
+
+<P><PRE>
+typedef struct
+{ u_short vertex0;             // index of the start <a href="qkspec_4.htm#BL3" target="content">vertex</A>
+                               //  must be in [0,numvertices[
+  u_short vertex1;             // index of the end <a href="qkspec_4.htm#BL3" target="content">vertex</A>
+                               //  must be in [0,numvertices[
+} edge_t;
+</PRE></P>
+
+<P>Note that the first edge in the list is never used: as a matter of
+fact, the <a href="qkspec_4.htm#BLD" target="content">List of Edges</A> uses positive or negative
+numbers to indicate the edge sense, so number zero would be unsuitable.</P>
+
+
+
+<H3>4.3.4 <A NAME="BL6">The Texture Informations</A></H3>
+
+<P>The texture informations define how the textures are rendred on the
+faces (i.e. the Wall, Floors, Ceilings, Sky, and Water areas).</P>
+
+<P>Since those surfaces can be of complex shape, they are split in simple
+convex <a href="qkspec_4.htm#BL7" target="content">Faces</A>. But then, all those faces have a reference
+to the same texture information.</P>
+
+<P><PRE>
+typedef struct
+{ vec3_t   vectorS;            // S vector, horizontal in texture space)
+  scalar_t distS;              // horizontal offset in texture space
+  vec3_t   vectorT;            // T vector, vertical in texture space
+  scalar_t distT;              // vertical offset in texture space
+  u_long   texture_id;         // Index of <a href="qkspec_4.htm#BL2" target="content">Mip Texture</A>
+                               //           must be in [0,numtex[
+  u_long   animated;           // 0 for ordinary textures, 1 for water 
+} surface_t;
+</PRE></P>
+
+
+<H4>Texture orientation</H4>
+
+<P>The orientation of the texture, on the face, is defined
+by two vectors <TT>S</TT> and <TT>T</TT>) and two offsets along these 
+vectors, <TT>distS</TT> and <TT>distT</TT>.<BR>
+See the explanation of <a href="qkspec_4.htm#BL7" target="content">Texture Mapping</A> below.</P>
+
+<P>The </TT>animated</TT> field is just a boolean that is set to 1 when
+the texture is to be used with a swirling animated texture, like water,
+slime or lava. If it is not set to 1 with those textures, the game
+crashes, complaining that surface extent is invalid.</P> 
+
+<H4>Mips mapping</H4>
+
+<P>The textures are rendered by using Mip Mapping: depending on the
+distance from the face to the player, a different texture is used
+for texture mapping, so as to reduce aliasing.</P>
+
+<P>Since the Mip Mapping uses distance as a trigger, the bounding box
+of all face vertices (i.e. the face extent) must be <EM>smaller
+than 256</EM>, for any coordinate.  Otherwise it would not be possible
+to select a Mip Mapping valid for all the texture.</P>
+
+<P>Once the right texture is chosen, the face is rendered as an
+ordinary texture-mapped convex face.</P>
+
+<H4>Texture names</H4>
+
+<P>The Mip texture are referenced by <TT>texture_id</TT>, so that
+more than 256 textures can be used in a level. But it is expected that
+the more texture you use, the slower the game will be, so do not
+use more than 64 without very good reasons.</P>
+
+<P>Depending on the <a href="qkspec_4.htm#CBSPI" target="content">name of the texture</A>, a 
+face will look like a sky, or a wall or floor (that can eventually be 
+animated).</P>
+
+
+
+
+<H3>4.3.5 <A NAME="BL7">The Face</A></H3>
+
+<P>The face are convex polygons that cover the original surfaces
+(convex polygons are more convenient for 3D rendering, especially
+in hardware).</P>
+
+<PRE>
+typedef struct  
+{ u_short plane_id;            // The <a href="qkspec_4.htm#BL1" target="content">plane</A> in which the face lies
+                               //           must be in [0,numplanes[ 
+  u_short side;                // 0 if in front of the plane, 1 if behind the plane
+  long ledge_id;               // first edge in the <a href="qkspec_4.htm#BLD" target="content">List of edges</A>
+                               //           must be in [0,numledges[
+  u_short ledge_num;           // number of edges in the <a href="qkspec_4.htm#BLD" target="content">List of edges</A>
+  u_short texinfo_id;          // index of the <a href="qkspec_4.htm#BL6" target="content">Texture info</A> the face is part of
+                               //           must be in [0,numtexinfos[ 
+  u_char typelight;            // type of lighting, for the face
+  u_char baselight;            // from 0xFF (dark) to 0 (bright)
+  u_char light[2];             // two additional light models  
+  long lightmap;               // Pointer inside the general light map, or -1
+                               // this define the start of the face light map
+} face_t;
+</PRE>
+
+<P>The faces that lie in the same plane must be stored
+consecutively, because they will be referenced as a list in the
+definition of <a href="qkspec_4.htm#BLE" target="content">models</A>.</P>
+
+<H4>Light level of the faces</H4>
+
+<P>The <TT>lightmap</TT> field is an offset into the <A
+HREF="#BL8">Light Maps</A>. If there is no light map, this pointer is
+-1.</P>
+
+<P>The <TT>baselight</TT> field gives the base light level for the
+face, that is the minimum light level for the light map, or the
+constant light level in the absence of light map.  Curiously, value
+<TT>0xFF</TT> codes for minimum light, and value <TT>0</TT> codes for
+maximum light.</P>
+
+<P>The <TT>typelight</TT> field indicates the kind of lighting that
+should be applied to the face:
+<UL>
+<LI> value <TT>0</TT> is the normal value, to be used with a light
+  map.
+<LI> value <TT>0xFF</TT> is to be used when there is no light map.
+<LI> value <TT>1</TT> produces a fast pulsating light
+<LI> value <TT>2</TT> produces a slow pulsating light
+<LI> value <TT>3</TT> to <TT>10</TT> produce various other
+  lighting effects, as defined in <a href="qkspec_3.htm#PDAT" target="content">The code lump</A>.
+</UL>
+Note that if you use values <TT>1</TT> to <TT>8</TT>, you may wish to
+set <TT>baselight</TT> to <EM>0</EM>.</P>
+
+
+
+<H4>Texture mapping</H4>
+
+<P>(Warning: texture mapping is totally different from early versions
+of the BSP model. Forget about those early versions.)</P>
+
+<P>To paint a face with a given texture, it is required that a position
+<TT>(s,t)</TT> in texture space be associated to each vertex in 3D space.
+</P>
+
+<P>But that would make a lot of data, because a given vertex is often used
+by more than one face, and each one require a special <TT>(s,t)</TT>
+coordinate. So it has been prefered to store only the S and T vectors,
+and to calculate the <TT>(s,t)</TT> coordinates on the fly, probably
+when loading the level.</P>
+
+<P>For a given face, the (s,t) coordinates are calculated from the 
+<a href="qkspec_4.htm#BL3" target="content">Vertex</A> coordinates and the <a href="qkspec_4.htm#BL6" target="content">Texture</A> 
+definitions by a simple dot product with the S and T vectors:
+<PRE>
+s = dotproduct(Vertex,<a href="qkspec_4.htm#BL6" target="content">vectorS</A>) + <a href="qkspec_4.htm#BL6" target="content">distS</A>;    
+t = dotproduct(Vertex,<a href="qkspec_4.htm#BL6" target="content">vectorT</A>) + <a href="qkspec_4.htm#BL6" target="content">distT</A>;
+</PRE>
+</P>
+
+<P>In theory, <TT>vectorS</TT> and <TT>vectorT</TT> should be orthogonal
+vectors, and always lie in the face plane (or rather, the face plane),
+so as to avoid any distortion when mapping the texture onto the face.</P>
+
+<P>Actually, those two vectors are often chosen among the coordinate axis
+themselves (or their opposite), so that textures in adjacent wall remain
+naturally aligned, despite the possibly different orientation of the
+walls. There is distortion of course, but it's limited.</P>
+
+<P>Also, though the skies are ordinary wall textures, they are drawn in a 
+very special way, that make them look like skies.  That is probably the 
+same trick as in DOOM: it doesn't take the player position into account 
+when texture mapping, only the orientation of view, so that the sky
+appears to be far away.</P>
+
+
+
+
+<H3>4.3.6 <A NAME="BL2">The Mip Textures</A></H3>
+
+<P>The Mip textures definitions are used only in
+<a href="qkspec_4.htm#BL6" target="content">Texture info</A>, and are referenced by index, not by
+name.</P>
+
+
+<P>The Mip Texture definition is a structured file, that contains a list of
+individual Mip Textures, each one accessed via an offset.
+<PRE>
+typedef struct                 // Mip texture list header
+{ long numtex;                 // Number of textures in Mip Texture list
+  long offset[numtex];         // Offset to each of the individual texture
+} mipheader_t;                 //  from the beginning of mipheader_t
+</PRE></P>
+
+<P>Each individual texture is also a structured entry, that indicates
+the characteristics of the textures, and a pointer to scaled down
+picture data.
+<PRE>
+typedef struct                 // Mip Texture
+{ char   name[16];             // Name of the texture.
+  u_long width;                // width of picture, must be a multiple of 8
+  u_long height;               // height of picture, must be a multiple of 8
+  u_long offset1;              // offset to u_char Pix[width   * height]
+  u_long offset2;              // offset to u_char Pix[width/2 * height/2]
+  u_long offset4;              // offset to u_char Pix[width/4 * height/4]
+  u_long offset8;              // offset to u_char Pix[width/8 * height/8]
+} miptex_t;
+</PRE></P>
+
+<P>The Mip texture header is generally followed by <TT>(width *
+height) * (85 / 64)</TT> bytes, that represent the color indexes of
+the textures pixels, at different scales.  Do not rely on that size
+however, rather consider the offsets described below.</P>
+
+<P>The pixels are accessed by offsets, with <TT>offset1</TT>
+(resp. <TT>2</TT>, <TT>3</TT>, <TT>4</TT>) pointing to the beginning
+of the color indexes of the picture scaled by 1 (resp. 1/2, 1/4, 1/8).
+These offsets are relative to the beginning of <TT>miptex_t</TT>.</P>
+
+<P>The <a href="qkspec_4.htm#CBSPI" target="content">name of the texture</A> is rather irrelevant,
+except that:
+<UL>
+<LI> if it begins by <TT>*</TT> it will be animated like lava or water.
+<LI> if it begins by <TT>+</TT> then it will be animated with frames,
+     and the second letter of the name will be the frame number.
+     Those numbers begin at 0, and go up to 9 at the maximum.
+<LI> if if begins with <TT>sky</TT> if will double scroll like a sky.<BR>
+     Beware that sky textures are made of two distinct parts.
+</UL>
+</P>
+
+<P>An individual Mip texture occupies 33% more space than a simple
+flat texture would.  This is the cost of anti-aliasing.</P>
+
+
+
+<H3>4.3.7 <A NAME="BL0">The list of entities</A></H3>
+
+<P>The format of the entity definitions is the same as in the <a href="qkspec_2.htm#2.2.3" target="content">
+Map specifications</a>, with the exception however that the entities that were
+defined by brushes in the Map file are now defined as an index into the
+<a href="qkspec_4.htm#BLE" target="content">list of BSP models</a> that are part of the level BSP model.
+</P>
+
+<HR>
+
+<H2><FONT COLOR="#4F1F00">4.4 <A NAME="CBSPN">Bsp tree definition</A></FONT></H2>
+
+<P>These are the entries that are related to the BSP tree that is used for rendering
+the level.</P>
+
+<H3>4.4.1 <A NAME="BL5">The BSP tree Nodes</A></H3>
+
+<P>The BSP tree nodes are used to partition one model (from the <A
+HREF="#BLE">List of models</A>) into a set of independent convex
+<a href="qkspec_4.htm#BLA" target="content">BSP tree Leaves</A>.</P>
+
+<P>All the BSP tree nodes are stored in that same BSP tree node
+structure, Though there is in fact one BSP tree per model.  But of
+course no index should point to nodes that are part of another BSP
+tree.</P>
+
+<P><PRE>
+typedef struct
+{ long    plane_id;            // The <a href="qkspec_4.htm#BL1" target="content">plane</A> that splits the node
+                               //           must be in [0,numplanes[
+  u_short front;               // If bit15==0, index of Front child node
+                               // If bit15==1, <B>~front</B> = index of <a href="qkspec_4.htm#BLA" target="content">child leaf</A>
+  u_short back;                // If bit15==0, id of Back child node
+                               // If bit15==1, <B>~back</B> =  id of <a href="qkspec_4.htm#BLA" target="content">child leaf</A>
+  bboxshort_t box;             // Bounding box of node and all childs
+  u_short face_id;             // Index of first <a href="qkspec_4.htm#BL7" target="content">Polygons</A> in the node
+  u_short face_num;            // Number of faces in the node
+} node_t;
+</PRE></P>
+
+<H4>Organisation of the BSP tree</H4>
+
+<P>The BSP tree nodes are part of a BSP tree, valid only inside a given model.</P>
+
+<P>The <TT>front</TT> (resp. <TT>back</TT>) value is the equivalent of the
+right (resp. left) of node, in DOOM.  Actually, even in DOOM it was the
+front (resp. back) of a linedef, if it had been extended
+vertically.</P>
+
+<P>If the bit 15 is not set, as detected by <TT>(value &amp;
+0x8000) == 0</TT>, then the number is the index to the front
+(resp. back) child node.</P>
+
+<P>If the bit 15 is set, then the child is in fact a BSP tree leaf,
+and the index of this leaf is obtained by inverting all the bits of
+<TT>front</TT> (resp. <TT>back</TT>).</P>
+
+<P>In particular, the value -1 translates into leaf index 0. But
+actually it means that there is no leaf. <a href="qkspec_4.htm#BLA" target="content">Leaf 0</A>
+is a dummy leaf, contains no faces, and has a special type (-2)
+that means the BSP tree rendering must stop.</P>
+
+<H4>The role of BSP tree nodes</H4>
+
+<P>The nodes are the Quake equivalent of the DOOM nodes and also of
+the DOOM blockmaps.  They are parts of a 3D BSP tree, not a 2D BSP
+tree like in DOOM.</P>
+
+<P>The nodes are used for level display, placements of entities and
+second-level collision detections.</P>
+
+<P>The front child node (and all the nodes below it) is entirely
+contained in the half-space that is in front of the split plane.</P>
+
+<P>The back child node (and all the nodes below it) is entirely
+contained in the half-space that is in the back of the split plane.
+(The 'front' and 'back' of a split planes are defined by the plane
+equation giving a positive or negative result for any given
+vertex.)</P>
+
+<H4>The Bounding Boxes of nodes</H4>
+
+<P>The Bounding box of the node is presented in a packed format,
+bboxshort_t, that only contains short integer instead of floats.</P>
+
+<P>That bounding box slightly exagerates the actual size of the node 
+and all it's childs. Each bounding box boundary seems to be rounded to
+the next multiple of 16, so that the bounding box is at least 32
+units larger than it should be.</P>
+
+<P>That means that the level coordinates must all remain roughly 
+between -32700 and +32700.</P>
+
+<H3>4.4.2 <A NAME="BLA">The BSP Tree Leaves</A></H3>
+
+<P>The BSP tree leaves are children of <a href="qkspec_4.htm#BL5" target="content">BSP tree
+Nodes</A> and indicate which <a href="qkspec_4.htm#BL7" target="content">faces</A> are contained
+inside a BSP tree leaf.</P>
+
+<P><PRE>
+typedef struct
+{ long type;                   // Special type of leaf
+  long vislist;                // Beginning of <a href="qkspec_4.htm#BL4" target="content">visibility lists</A>
+                               //     must be -1 or in [0,numvislist[
+  bboxshort_t bound;           // Bounding box of the leaf
+  u_short lface_id;            // First item of the <a href="qkspec_4.htm#BLB" target="content">list of faces</A>
+                               //     must be in [0,numlfaces[
+  u_short lface_num;           // Number of faces in the leaf  
+  u_char sndwater;             // level of the four ambient sounds:
+  u_char sndsky;               //   0    is no sound
+  u_char sndslime;             //   0xFF is maximum volume
+  u_char sndlava;              //
+} dleaf_t;
+</PRE></P>
+
+<P>The first leaf (index 0) is always totally solid, so that in the 
+<a href="qkspec_4.htm#BL5" target="content">BSP tree nodes</A>, a value of zero points to a solid
+leaf (i.e. a leaf that need not be rendered).</P>
+
+<P>The BSP tree leaf contains a reference to a set of consecutive
+entries in the <a href="qkspec_4.htm#BLB" target="content">list of faces</A>.</P>
+
+<P>The bounding box must contain all the faces in the leaf.</P>
+
+<P>The leaf contains an index to the <a href="qkspec_4.htm#BL4" target="content">Visibility
+Lists</A> that describe which other leaves are visible from that
+leaf. If this index is -1, then all the other leaves are visible.</P>
+
+<P>The tree leaves are the Quake equivalent of the sectors in DOOM.
+You can imagine them as rooms, or part of rooms, where the monsters,
+players and object will be placed.</P>
+
+<P>Actually the tree leaves are the equivalent of the Sub Sectors:
+each sector in DOOM is decomposed by the BSP into smaller and simpler
+convex sub sectors, that contain only part of the sector lines.</P>
+
+<P>Technically, each tree leaf, made of some faces and bound by the
+BSP node split lines, appears in 3D space as a convex polytope.</P>
+
+<H4>Leaf types</H4>
+
+<P>The <TT>type</TT> field describes what happens when the player
+is into that precise leaf. Here are the known values (negative):
+<UL>
+<LI> <B>-1</B>: ordinary leaf
+<LI> <B>-2</B>: the leaf is entirely inside a solid (nothing is displayed).
+<LI> <B>-3</B>: Water, the vision is troubled.
+<LI> <B>-4</B>: Slime, green acid that hurts the player.
+<LI> <B>-5</B>: Lava, vision turns red and the player is badly hurt.
+<LI> <B>-6</B>: Behaves like water, but is used for sky.
+<LI> All types below -6 seem to be water (maybe they are not
+  implemented yet)
+</UL>
+Note that this field is only taken into account when the player is in
+the leaf, so if you're in a leaf full of water you'll see the world
+blurred, but players outside will see you perfectly.  </P>
+
+
+
+<H3>4.4.3 <A NAME="BLB">The List of Faces</A></H3>
+
+<P>This structure stores a list of indexes of faces, so that a list
+of faces can be conveniently associated to each <a href="qkspec_4.htm#BLA" target="content">BSP
+tree leaf</A>.</P>
+
+<P><PRE>
+u_short lface[numlface];   // each u_short is the index of a <a href="qkspec_4.htm#BL7" target="content">Face</A>
+</PRE></P>
+
+<P>The list of faces is only used by the <a href="qkspec_4.htm#BLA" target="content">BSP tree
+leaf</A>.  This intermediary structure was made necessary because the
+<a href="qkspec_4.htm#BL7" target="content">faces</A> are already referenced by <A
+HREF="#BL5">Nodes</A>, so a simple reference by first face and
+number of faces was not possible.</P>
+
+
+
+
+<H3>4.4.4 <A NAME="BLD">The List of Edges</A></H3>
+
+<P>This structure stores indexes of edges, possibly inverted, so that
+<a href="qkspec_4.htm#BL7" target="content">faces</A> can be reconstituted.</P>
+
+<P><PRE>
+short lstedge[numlstedge];
+</PRE></P>
+
+<P>All the edges in a <a href="qkspec_4.htm#BL7" target="content">face</A> are stored
+consecutively, with the correct orientation so that all the <A
+HREF="#BL3">vertices</A> in the face are walked
+<B>clockwise</B>.</P>
+
+<P>But since the edges are used for more than one face, there is a
+trick to ensure that the edge of a given face is always referenced
+with the correct orientation:
+<UL>
+<LI> if <TT>lstedge[e]</TT> is positive, then <TT>lstedge[e]</TT> is
+  an index to an <a href="qkspec_4.htm#BLC" target="content">Edge</A>, and that edge is walked in the
+  normal sense, from vertex0 to vertex1.
+<LI> if <TT>lstedge[e]</TT> is negative, then <TT>-lstedge[e]</TT> is
+  an index to an <a href="qkspec_4.htm#BLC" target="content">Edge</A>, and that edge is walked in the
+  inverse sense, from vertex1 to vertex0.
+</UL></P>
+
+<P>The fact that all edges are walked in a <B>clockwise</B> order is
+<B>critical</B> for the face rendering process (rasterisation).</P>
+
+<P>The faces are made of just one closed set of edges, or
+contour. Those edges seem to be always stored in the right order.</P>
+
+
+
+
+
+<H3>4.4.5 <A NAME="BL4">Visibility Lists</A></H3>
+
+<P><I>(Thanks to David Etherton for determining the precise formula)</I></P>
+
+<P>The visibility lists are used by <a href="qkspec_4.htm#BLA" target="content">BSP Leaves</A>, to
+determine which other leaves are visible from a given BSP Leaf.</P>
+
+<P>The Visibility list can be of size 0, in that case it will not be
+used.  The game will crawl if there is no visibility list in a
+level.</P>
+
+<P><PRE>
+u_char vislist[numvislist];    // RLE encoded bit array
+</PRE></P>
+
+
+<P>Basically, the visibility list is an array of bits. There is one
+such array of bits for each <a href="qkspec_4.htm#BLA" target="content">BSP Leaf</A>.  They are all
+stored in the vislist array, and each leaf has an index to the first
+byte of it's own array</P>
+
+<P>The bit number N, if set to 1, tells that when laying in the tree
+leaf, one can see the leaf number N.</P>
+
+<P>The only complication is that this bit array in run-length encoded:
+when a set of bytes in the array are all zero, they are coded by zero
+followed by the number of bytes is the set (always more than 1).<P>
+
+<P>Normally, the size of the bit array associated to a leaf should be
+<TT>(<a href="qkspec_4.htm#BLE" target="content">numleafs</A>+7)/8</TT>, but in fact due to the run
+lenght encoding, it's usually much less.</P>
+
+<P>When the player is in a leaf, the visibility list is used to tag
+all the leaves that can possibly be visible, and then only those
+leaves are rendered.</P>
+
+<P>Here is an example of decoding of visibility lists:
+<CODE><PRE>
+// Suppose Leaf is the leaf the player is in.
+v = Leaf.vislist;
+for (L = 1; L &lt; numleaves; v++)
+  {
+    if (visisz[v] == 0)           // value 0, leaves invisible
+      {
+        L += 8 * visisz[v + 1]    // skip some leaves
+        v++;
+      }
+    else                          // tag 8 leaves, if needed
+      {                           // examine bits right to left
+        for (bit = 1; bit != 0; bit = bit * 2, L++)
+          {
+            if (visisz[v] &amp; bit)
+              TagLeafAsVisible(L);
+          }
+      }
+  }
+</PRE></CODE>
+Lots of thanks to <b>Tony Myles</b> who fixed the  bit mask formula.
+</P>
+
+<P>There is no necessity to unpack the visibility list in memory,
+because the code to read them is fast enough.</P>
+
+<P>If you put a few badly placed zero bits in the visibility lists,
+some of the leaves will turn into totally grey areas, and that's
+rather funny.  If you put <B>all bits to zero</B> for a given <A
+HREF="#BLA">leaf</A>, then every player in that sector will become
+temporarily <B>blind</B>: he will get a fully grey screen.  I wonder
+what use you can make of this in level design, though.  If only it had
+been black...</P>
+
+<P>The visibility list structure is the Quake equivalent of the REJECT
+map of DOOM, except that now it's also <B>used for level
+rendering</B>.  It eliminates leaves that can't be seen, whereas in
+DOOM it was just use to speed up monster line of sight
+calculations.</P>
+
+
+
+<HR>
+
+<H2><FONT COLOR="#4F1F00">4.5 <A NAME="CBSPC">Pre-calculated geometric
+entries</A></FONT></H2>
+
+<P>Those entries can all be automatically calculated from the <A
+HREF="#CBSPL">Level layout definition</A>, and are not related to the
+<a href="qkspec_4.htm#CBSPN" target="content">Bsp tree definition</A>.</P>
+
+<P>Do not confuse the <A HREF=="#BL9">Clip Nodes</A> with the BSP
+tree nodes, they are not used for the rendering of the level.</P>
+
+<H3>4.5.1 <A NAME="BL1">List of Planes</A></H3>
+
+<P>The plane definitions are used for <a href="qkspec_4.htm#BL7" target="content">faces</A>, <A
+HREF="#BL5">BSP Nodes</A>, <a href="qkspec_4.htm#BL9" target="content">Clip Nodes</A>.</P>
+
+<P>The order of planes in list is irrelevant.
+<PRE>
+typedef struct
+{ vec3_t normal;               // Vector orthogonal to plane (Nx,Ny,Nz)
+                               // with Nx2+Ny2+Nz2 = 1
+  scalar_t dist;               // Offset to plane, along the normal vector.
+                               // Distance from (0,0,0) to the plane
+  long    type;                // Type of plane, depending on normal vector.
+} plane_t;
+</PRE></P>
+     
+<P>Plane <tt>type</tt>s:
+<UL> 
+<LI> 0:  Axial plane, in X
+<LI> 1:  Axial plane, in Y
+<LI> 2:  Axial plane, in Z
+<LI> 3:  Non axial plane, roughly toward X
+<LI> 4:  Non axial plane, roughly toward Y
+<LI> 5:  Non axial plane, roughly toward Z
+</UL>
+</P>
+
+<P>The planes are used as split planes in the BSP tree nodes, and as
+reference plane in the faces.</P>
+
+<P>They are the Quake equivalent of the DOOM Linedefs and
+Segments.</P>
+
+<P>The planes are defined by a normal vector and a distance.  This
+normal vector must be of norm 1.</P>
+
+<P>The plane equations are used for distance calculation and to
+determine if a given vertex (of a face, or an entity) is on the
+front side or the back side of the plane.</P>
+
+<P>Some of the planes, especially the first ones in the list, are not
+associated to any face, but rather to BSP nodes split planes.  So
+they show <TT>numsurf = 0</TT>.</P>
+
+<P>There must be only one given plane definition, for any plane in 3D
+space.  That's because the calculations of the translation and
+rotation of plane normal vector are cached, so if you put redundant
+planes definitions you'll contribute to slowing down the engine.
+Definitely not an option.</P>
+
+
+
+<H3>4.5.2 <A NAME="BL9">The Clip Nodes</A></H3>
+
+<P>This structure is used to give a rough and somewhat exaggerated
+boundary to a given <a href="qkspec_4.htm#BLE" target="content">model</A>.  It does not separate
+models from each others, and is not used at all in the rendering of the
+levels</P>
+
+<P>Actually, the clip nodes are only used as a first and primitive
+collision checking method. </P>
+
+<P>The clip nodes are much simpler than the <a href="qkspec_4.htm#BL5" target="content">BSP
+nodes</A>, so it makes collision detection faster, most of the time.
+In the same idea, DOOM defined a BLOCKMAP for faster collision
+detection.</P>
+
+<P><PRE>
+typedef struct
+{ u_long planenum;             // The <a href="qkspec_4.htm#BL1" target="content">plane</A> which splits the node
+  short front;                 // If positive, id of Front child node
+                               // If -2, the Front part is inside the model
+                               // If -1, the Front part is outside the model
+  short back;                  // If positive, id of Back child node
+                               // If -2, the Back part is inside the model
+                               // If -1, the Back part is outside the model
+} clipnode_t;
+</PRE></P>
+
+<P>The engine starts from the top bound node as defined in the <A
+HREF="#BLE">Model</A>.
+<UL>
+
+<LI>If the value of <TT>front</TT> (resp. <TT>back</TT>) is positive,
+  then it's the index of a child clip node.
+<LI>If value <TT>-1</TT> is met, then the front (resp. back) half
+  space is outside of the model, and collision is impossible.
+<LI> If the value <TT>-2</TT> is met, then the front (resp. back) half
+  space is inside the model, and the <a href="qkspec_4.htm#BL5" target="content">BSP nodes</A> must be
+  checked.
+</UL>
+</P>
+
+<P>There is no bounding box defined for those nodes, because the
+bounding box is that of the <a href="qkspec_4.htm#BLE" target="content">model</A> bounding
+boxes.</P>
+
+<P>If you modify a clip node, for instance by changing the plane
+definitions or by putting -1 values for each child, then the model
+becomes totally pass-through.  That's a very funny special effect.</P>
+
+<P>The Clip Nodes do not tightly bound a model, so you should
+<EM>never</EM> use planes from the model as clip node split
+planes. Actually, the clip node planes should be distant from the
+model by at least <EM>16</EM> in X,Y, and <EM>24</EM> in Z.</P>
+
+<P>Also take care that the Clip Node planes should be oriented toward
+the <EM>exterior</EM> of the model, not the interior.  If you change
+the orientation, then the player can go through the model as if it did
+now exist... even falling through the floor.</P>
+
+
+
+
+<H3>4.5.3 <A NAME="BL8">The Light Maps</A></H3>
+
+<P>The light maps are special arrays that indicate the brightness of
+some points in the <a href="qkspec_4.htm#BL2" target="content">Mip Texture</A> pictures.</P>
+
+<P>Different light maps can be associated to each <A
+HREF="#BL7">face</A>, so that two faces with similar textures
+can still look different, depending on the light level.</P>
+
+<P>The light maps are simply:
+<PRE>
+u_char lightmap[numlightmap];  // value <B>0</B>:dark <B>255</B>:bright
+</PRE></P>
+
+<H4>Light levels</H4>
+
+<P>The u_char value that the lightmap gives at any point is directly a
+light level value, from 0 to 255.  If you put zero, it will be utter
+darkness, and if you put 255 if will be totally bright.</P>
+
+<P>The formula for calculating light level is something like:
+<PRE>
+light(X,Y,Z) = lightmap(X,Y,Z) * lightstyle(typelight, time) - baselight
+</PRE>
+where, as a rough explanation:
+<UL>
+<LI> <a href="qkspec_4.htm#BL7" target="content"><TT>baselight</TT></A> is the base light level of
+  each face (the flat shading of the surface).
+<LI> <TT>lightmap(X,Y,Z)</TT> results from the translation of the
+  lightmap into 3D space (see below).
+<LI> <a href="qkspec_3.htm#PDAT" target="content"><TT>lightstyle</TT></A> is a table of available
+  light styles, available in the code lump. The light style used depends
+  on the <a href="qkspec_4.htm#BL6" target="content">typelight</A> of the corresponding face.
+<LI> The exact lightstyle multiplier changes over time, so that it
+  looks like the face's light is pulsating.
+</UL>
+</P>
+
+<P>Note that the textures's color and light are translated into a
+final color by using a pre-calculated color palette.  Direct RGB
+calculations would be too costly and not very suitable for 256 color
+displays.  This is the same trick as used when gouraud shading the
+Alias models.</P>
+
+
+
+<H4>Translation of lightmaps into 3D space</H4>
+
+<P>Well the exact formula seems rather hard to determine
+experimentally, so don't expect this explanation to be accurate.</P>
+
+<P>The size and layout of a lightmap, on texture space, is not related
+to the <A HREF="#BL2>texture</A> but only to the <A
+HREF="#BL7">face</A> extent, in 3D space. You can change the
+texture without having to recalculate light maps.</P>
+
+<P>Each light maps seem to be stored as a simple
+<PRE>
+u_char light[width*height];
+</PRE>
+where <TT>width</TT> and <TT>height</TT> are determined by the extents
+of the faces's bounding box, i.e. the bounding box of all the <A
+HREF="#BL3">vertices</A> contained in that face (or, rather, all
+the <a href="qkspec_4.htm#BLC" target="content">Edges</A>).</P>
+
+<P>Since such a bounding box is essentially 3D, and the lightmap is
+only 2D, one coordinate has to be discarded. The coordinate to remove
+depends on the orientation of the face's plane, as given by the <A
+HREF="#BL1">Plane Type</A>.</P>
+
+<P>This mapping from 3D to 2D, by discarding one coordinate, is
+exactly the same as the one used for <a href="qkspec_4.htm#BL6" target="content">Texture
+Mapping</A> the faces.  You can probably consider the lightmaps as
+``alpha-channel textures'' which modify the intensity of the real
+textures on which they are applied.</P>
+
+<P>Note that the extents of the bounding box (i.e. the difference
+between maximum and minimum values) must be divided by 16 to give the
+<TT>width</TT> and <TT>height</TT>, because a lightmap value is only
+calculated every 16 steps, for every coordinate.
+
+<P>Calculating only every 16 steps make the radiosity calculation 256
+times less tedious, and ensures that the lightmap will look nice and
+smooth on the face (because bilinear interpolation is used between
+known lightmap values).</P>
+
+
+<H4>Unknown Fields</H4>
+
+<P>I'm aware that the above explanation is rather obfuscated, and may
+not cover all cases.  It's savagely hacked out of some experimental
+results and some considerations on the convenience of
+calculations.</P>
+
+<P>Note also that the lightmap are oriented in regard to the 3D
+coordinates, and do not seem to care about the face orientation.
+So if you modify a lightmap, chances are that your modifications will
+happen is some unexpected place (like, at the bottom instead of at the
+top...).</P>
+
+<P>Last, in case you wonder where the <TT>lightstyle</TT> table is
+defined, the answer is: no idea. </P>
+
+<HR>
+
+<H2><FONT COLOR="#4F1F00">4.6 <A NAME="CBSPI">Additional Informations</A></FONT></H2>
+
+
+<H3>4.6.1 Texture names</H3>
+
+<P><I>(Thanks to Stephen Crowley for experimenting with the names)</I></P>
+
+<P>The names of textures can contain up to 16 characters.</P>
+
+<P>The animation of the texture is entirely determined by it's name:
+there are three special names, that make different animations. All the
+other names mean that the texture is not animated.</P>
+
+<P>Here are the animated textures:
+<UL>
+<LI> <B>sky</B>: the texture will behave like a sky, with two levels
+        of scrolling made of two parts of the textures.
+<LI> <B>*lava</B>: the texture slowly swirls, like the lava.
+<LI> <B>*water</B>: the texture lsowly swirls, apparently like lava. 
+</UL>
+Currently, no other combination works.
+</P>
+
+
+<P>When displaying an animated texture, the lightmap and light levels
+are not taken into account. Those textures are always rendered at full
+brightness, probably because the face cache would be saturated if
+every animation frame had to fit into it.</P>
+
+<P>Note that sky textures have an extent that make them too big to
+display as an ordinary wall texture, and that if you turn an ordinary
+texture into a sky texture, it will look fairly weird.</P>
+
+<P>Also, for some strange reason, bit <TT>4</TT> of the <A
+HREF="#BL7">face flags</A> is set when the texture is supposed to
+be animated. If you replace an animated texture by an ordinary texture,
+and forget to set this bit to zero, then there will be an error like:
+<TT>SurfExtent>256</TT>.</P>
+
+
+
+<H3>4.6.2 Texture Anti-aliasing</H3>
+
+
+<P>This is an attempted explanation for the curious structure of the
+Mip Texture.</P>
+
+<P>The sampling theorem states that when you sample any signal (sound,
+picture, anything) the highest frequency contained in this signal must
+be at most one half of the sampling frequency.  If there is any
+frequency above that, the sampling process will map it into a lower
+frequency, thus creating a terrible mess into the sampled signal.
+This mess is called Aliasing.</P>
+
+<P>When you try to display a picture on a smaller space, you increase
+all the frequencies contained in that picture, and thus risk Aliasing.
+That's basically what happened in DOOM at long distance.</P>
+
+<P>Now, all you need is only to low-pass filter the picture, with a
+cut frequency equal to half the sampling frequency.  Easy!  But...
+There is no DSP on the video memory, so those calculations would take
+too much time.  It's much easier to pre-calculate 4 scaled down
+pictures, that can be used across the most common range of scales:<BR>
+infinity-1, 1-1/2, 1/2-1/4, 1/4-1/8.<BR>
+Below 1/8, there will be some aliasing...</P>
+
+
+
+
+
+<HR SIZE=3>
+</BODY></HTML>

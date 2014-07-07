@@ -1,0 +1,451 @@
+<HTML><HEAD>
+<TITLE>Quake Specs v3.3</TITLE>
+<LINK REV="MADE" HREF="mailto:Olivier.Montanuy@wanadoo.fr">
+</HEAD>  
+<BODY BGCOLOR="#FFFFFF">
+
+<H1><FONT COLOR="#007F00"><A NAME="APPA">Appendix A.</A> Model
+Examples</FONT></H1>
+
+<P>These examples of the <a href="qkspec_2.htm#CMFME" target="content">model types</A> may help to
+explain their use a little better.  They were extracted from the three
+levels included in QTEST1.</P>
+
+<H2><FONT COLOR="#4F1F00">A.1 Map TEST1</FONT></H2>
+
+<TABLE><TR><TH>Models</TH><TH>Model Bounding box Co-ordinates</TH></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*1&quot;
+  &quot;angle&quot; &quot;-2&quot;
+  &quot;classname&quot; &quot;func_door&quot;
+  &quot;targetname&quot; &quot;t2&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = 412, y = 1352, z = -144
+max: x = 428, y = 1368, z =  -24
+
+</PRE></TD></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*2&quot;
+  &quot;angle&quot; &quot;-2&quot;
+  &quot;classname&quot; &quot;func_door&quot;
+  &quot;targetname&quot; &quot;t2&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = 448, y = 1352, z = -144
+max: x = 464, y = 1368, z =  -24
+
+</PRE></TD></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*5&quot;
+  &quot;classname&quot; &quot;func_button&quot;
+  &quot;target&quot; &quot;t2&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = 500, y = 1240, z = -104
+max: x = 512, y = 1256, z =  -88
+
+</PRE></TD></TR>
+</TABLE>
+
+<P>These are the columns that block the path to the
+teleport. <TT>*1</TT> is the left column (looking from outside the
+room by the button) and <TT>*2</TT> is the one one the right.
+<TT>*5</TT> is the button that lowers the two columns.</P>
+
+<P>Note the targetname <TT>t2</TT> for both columns and the same one
+for the button (model <TT>*5</TT>) This is what ties the button to the
+lowering of the columns.</P>
+
+<P>The angle specific here describes the direction to move the column.
+Changing it to <TT>&quot;0&quot;</TT> moves the column to the right
+instead of down (looking at it from by the button).  The angle is in
+degrees for objects moving parallel to the normal line of sight but
+for movements perpendicular to this ``horizontal plane'',
+<TT>&quot;-1&quot;</TT> and <TT>&quot;-2&quot;</TT> are used for up
+and down respectively.</P>
+
+<P>Note: When the angle of model <TT>*1</TT> was changed to
+<TT>&quot;-1&quot;</TT>, it moved up instead of down...  After jumping
+through the teleporter the column could be seen protruding though the
+floor upstairs.  This is important in that it showed that the model
+was in fact a 3D object that is simply being moved in the manner
+defined and not just some textures being manipulated in such a way as
+to make them appear to be solid.</P>
+
+<TABLE><TR><TH>Models</TH><TH>Model Bounding box Co-ordinates</TH></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*3&quot;
+  &quot;target&quot; &quot;t1&quot;
+  &quot;classname&quot; &quot;trigger_teleport&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = 244, y = 1576, z = -136
+max: x = 284, y = 1624, z =  -40
+
+</PRE></TD></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;targetname&quot; &quot;t1&quot;
+  &quot;angle&quot; &quot;90&quot;
+  &quot;origin&quot; &quot;448 1028 16&quot;                   
+  &quot;classname&quot; &quot;info_teleport_destination&quot;
+  &quot;light&quot; &quot;250&quot;
+}
+</PRE></TD><TD>
+(Not a model, just a target)
+</TD></TR>
+</TABLE>
+
+
+<P>Model <TT>*3</TT> is the teleporter.  The <TT>target</TT> specific
+points it to the <TT>info_teleporter_destination</TT> entity with the
+same tag (<TT>t1</TT>).</P>
+
+
+<TABLE><TR><TH>Model</TH><TH>Model Bounding box Co-ordinates</TH></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*4&quot;
+  &quot;classname&quot; &quot;func_door_secret&quot;
+  &quot;angle&quot; &quot;180&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = 448, y = 668, z =   8
+max: x = 512, y = 684, z =  88
+
+</PRE></TD></TR>
+</TABLE>
+
+<P>This is the ``secret'' door that leads out onto the ledge with the
+100% health.  Again the angle just tells the function which way to
+move it.</P>
+
+<TABLE><TR><TH>Model</TH><TH>Model Bounding box Co-ordinates</TH></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*6&quot;
+  &quot;classname&quot; &quot;func_door&quot;
+  &quot;angle&quot; &quot;180&quot;
+  &quot;spawnflags&quot; &quot;1&quot;
+  &quot;targetname&quot; &quot;t3&quot;
+  &quot;speed&quot; &quot;175&quot;
+  &quot;wait&quot; &quot;8&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = -304, y = 1360, z = -16
+max: x =  -64, y = 1472, z =  -4
+
+</PRE></TD></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*7&quot;
+  &quot;classname&quot; &quot;func_button&quot;
+  &quot;target&quot; &quot;t3&quot;
+  &quot;angle&quot; &quot;-2&quot;
+  &quot;lip&quot; &quot;4&quot;
+  &quot;wait&quot; &quot;10&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = -400, y = 1564 z =  -4
+max: x = -344, y = 1616 z =   4
+
+</PRE></TD></TR>
+</TABLE>
+
+<P>These are the bridge to the 150% armor and the button on the floor
+that causes it to extend.  Note the lip arg in model <TT>*7</TT>, this
+defines the starting position in some way related to the surface that
+the model is being moved into or out of.</P>
+
+<P>It is also notable that the buttons are activated by touch (walking
+over this one is as good as bumping model <TT>*5</TT>.  Presumably you
+could put a button on the ceiling and have the player jump up into
+it.</P>
+
+
+<H2><FONT COLOR="#4F1F00">A.2 Map TEST2</FONT></H2>
+
+<P>There are a <B>lot</B> of models/models in test2 (lots of moving
+stuff) and it is here that we start to see some of the real
+possibilities inherent in the engine.</P>
+
+<TABLE><TR><TH>Model</TH><TH>Model Bounding box Co-ordinates</TH></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*7&quot;
+  &quot;speed&quot; &quot;200&quot;
+  &quot;classname&quot; &quot;func_door&quot;  
+  &quot;angle&quot; &quot;0&quot;
+  &quot;targetname&quot; &quot;t3&quot;
+  &quot;spawnflags&quot; &quot;4&quot;
+  &quot;dmg&quot; &quot;1000&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = 1112, y = -1024, z =   0
+max: x = 1240, y =  -832, z = 112
+
+</PRE></TD></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*9&quot;
+  &quot;speed&quot; &quot;200&quot;
+  &quot;dmg&quot; &quot;1000&quot;
+  &quot;targetname&quot; &quot;t3&quot;
+  &quot;angle&quot; &quot;180&quot;
+  &quot;spawnflags&quot; &quot;4&quot;
+  &quot;classname&quot; &quot;func_door&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = 2120, y = -1024, z =   0
+max: x = 2248, y =  -832, z = 112
+
+</PRE></TD></TR>
+</TABLE>
+
+<P>These are the walls that make up the two crushing traps on either
+side of the starting room that allow you to kill anyone who goes for
+the yellow armor in the cages.</P>
+
+<P>Here is the first use of the <TT>dmg</TT> arg that defines how
+badly it hurts you if it closes on you.  There are some doors that
+will hurt you slightly (3-5%) if they catch you as they are closing.
+There might be a default <TT>dmg</TT> value for certain types of doors
+but, clearly, setting this at 1000 as it is here, will kill you in one
+hit.</P>
+
+<TABLE><TR><TH>Model</TH><TH>Model Bounding box Co-ordinates</TH></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*11&quot;
+  &quot;target&quot; &quot;t4&quot;
+  &quot;classname&quot; &quot;func_train&quot;  
+}
+</PRE></TD><TD><PRE>
+min: x = 1792, y = -1064, z = 304
+max: x = 1888, y =  -984, z = 320
+</PRE></TD></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;target&quot; &quot;t5&quot;
+  &quot;targetname&quot; &quot;t4&quot;
+  &quot;origin&quot; &quot;1792 -1064 304&quot;
+  &quot;classname&quot; &quot;path_corner&quot;
+}
+</PRE></TD><TD>
+(Not a model, just a target)
+</TD></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;target&quot; &quot;t4&quot;
+  &quot;targetname&quot; &quot;t5&quot;
+  &quot;classname&quot; &quot;path_corner&quot;
+  &quot;origin&quot; &quot;1472 -1064 304&quot;
+}
+</PRE></TD><TD>
+(Not a model, just a target)
+</TD></TR>
+</TABLE>
+
+<P>This is that sliding platform that goes back and forth above the
+starting room and carries you to the grenade-launcher and back
+again.</P>
+
+<P>The model is the ferry itself and I have included it's two
+path_corners that define the extents of its route.  The thing to note
+here is how the targets are set up pointing to each other's
+<TT>targetname</TT> to keep the platform moving to and fro.  I imagine
+that if you were to set up a series of these corners, that just kept
+pointing to the next one in line, that you could have one of these
+things follow a long complex path through the level.</P>
+
+<TABLE><TR><TH>Model</TH><TH>Model Bounding box Co-ordinates</TH></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*1&quot;
+  &quot;classname&quot; &quot;func_door&quot;
+  &quot;angle&quot; &quot;180&quot;
+  &quot;targetname&quot; &quot;t1&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = 1392, y = -1272, z = -16
+max: x = 1696, y =  -840, z =  -4
+
+</PRE></TD></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*2&quot;
+  &quot;classname&quot; &quot;func_door&quot;
+  &quot;angle&quot; &quot;0&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = 1696, y = -1272, z = -16
+max: x = 2000, y =  -840, z = -4
+
+</PRE></TD></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*3&quot;
+  &quot;classname&quot; &quot;func_button&quot;
+  &quot;angle&quot; &quot;90&quot;
+  &quot;target&quot; &quot;t1&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = 1288, y = -832, z = 16
+max: x = 1336, y = -816, z = 56
+
+</PRE></TD></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*4&quot;
+  &quot;spawnflags&quot; &quot;4&quot;
+  &quot;targetname&quot; &quot;t1&quot;
+  &quot;classname&quot; &quot;func_door&quot;
+  &quot;angle&quot; &quot;270&quot;
+  &quot;wait&quot; &quot;4&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = 1632, y = -1408, z = -16
+max: x = 1760, y = -1288, z =  -4
+
+</PRE></TD></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*5&quot;
+  &quot;classname&quot; &quot;func_door&quot;
+  &quot;spawnflags&quot; &quot;4&quot;
+  &quot;angle&quot; &quot;90&quot;
+  &quot;targetname&quot; &quot;t1&quot;
+  &quot;lip&quot; &quot;0&quot;
+  &quot;wait&quot; &quot;4&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = 1632, y = -824, z = -16
+max: x = 1760, y = -688, z =  -4
+
+</PRE></TD></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*8&quot;
+  &quot;target&quot; &quot;t1&quot;
+  &quot;angle&quot; &quot;90&quot;
+  &quot;classname&quot; &quot;func_button&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = 2024, y = -832, z = 16
+max: x = 2072, y = -816, z = 56
+
+</PRE></TD></TR>
+</TABLE>
+
+<P>Models <TT>*1</TT> and <TT>*3</TT> somehow define the targetname
+for model <TT>*2</TT>.</P>
+
+<P>These are all the definitions that handle the two buttons in the
+yellow armor cages and the four floor surfaces that they cause to
+open.  Notice that there are only five target/targetname specifics
+(<TT>t1</TT>) in the group.</P>
+
+<P>Every once in a while, when calling two models into action, one of
+the targetnames will be missing.  It turns out that you can wrap at
+least one targetname-less model in between two models that are
+targeted at one another.  Quake, apparently, will assume that you mean
+to apply the action to the middle one as well.</P>
+
+<TABLE><TR><TH>Model</TH><TH>Model Bounding box Co-ordinates</TH></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*25&quot;
+  &quot;targetname&quot; &quot;t15&quot;
+  &quot;angle&quot; &quot;180&quot;
+  &quot;classname&quot; &quot;func_door&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = 2336, y = -568, z = 32
+max: x = 2400, y = -552, z = 96
+
+</PRE></TD></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*26&quot;
+  &quot;classname&quot; &quot;func_door&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = 2400, y = -568, z = 32
+max: x = 2464, y = -552, z = 96
+
+</PRE></TD></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*27&quot;
+  &quot;target&quot; &quot;t15&quot;
+  &quot;classname&quot; &quot;trigger_multiple&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = 2336, y = -616, z = 56
+max: x = 2464, y = -560, z = 64
+
+</PRE></TD></TR>
+</TABLE>
+
+
+<P>Here is another example of the dropped targetname whilst wrapping,
+using the <TT>trigger_multiple</TT> classname.  This is the small
+double doors that let you out of the secret room with the red armor.
+Model <TT>*27</TT> is walk-over activated (as are all triggers) and
+opens the doors when you approach them.</P>
+
+<TABLE><TR><TH>Model</TH><TH>Model Bounding box Co-ordinates</TH></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*31&quot;
+  &quot;classname&quot; &quot;func_plat&quot;  
+}
+</PRE></TD><TD><PRE>
+min: x = 1248, y = -704, z = 160
+max: x = 1392, y = -576, z = 320
+</PRE></TD></TR>
+</TABLE>
+
+<P><TT>func_plats</TT> are the elevator/lifts that automatically rise
+as you step on them.  If they have the <TT>angle</TT> arg included it
+would seem to be an indicator of the direction from which it is
+activated.</P>
+
+
+
+<H2><FONT COLOR="#4F1F00">A.3 Map TEST3</FONT></H2>
+
+<TABLE><TR><TH>Model</TH><TH>Model Bounding box Co-ordinates</TH></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*5&quot;
+  &quot;classname&quot; &quot;func_dm_only&quot;  
+}
+</PRE></TD><TD><PRE>
+min: x = 1184, y = -960, z = -48
+max: x = 1200, y = -848, z =  48
+
+</PRE></TD></TR>
+<TR VALIGN=TOP><TD><PRE>
+{
+  &quot;model&quot; &quot;*6&quot;
+  &quot;classname&quot; &quot;func_dm_only&quot;
+}
+</PRE></TD><TD><PRE>
+min: x = -576, y = -496, z = -40
+max: x = -560, y = -400, z =  64
+</PRE></TD></TR>
+</TABLE>
+
+<P>Map three is the only one that has these ... these models are
+obviously the two teleporters that are only available during
+deathmatch.</P>
+
+
+<HR SIZE=3>
+</BODY></HTML>
