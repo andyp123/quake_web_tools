@@ -228,42 +228,83 @@ QuakeWebTools.MDL.prototype.expandTriangles = function() {
   return triangles;
 }
 
+QuakeWebTools.MDL.prototype.toThreeMaterial = function(skin_id) {
+  var QWT = QuakeWebTools;
 
-QuakeWebTools.MDL.prototype.toThreeJSON = function(frame) {
-  frame = frame || this.frames[0];
+  skin_id = (skin_id >= 0 && skin_id < this.skins.length) ? skin_id : 0;
+  var skin = this.skins[skin_id];
 
-  var triangles = this.expandTriangles(); // might want to extract multiple frames
-  var uvs = [];
-  var faces = [];
-  var type_id = 2; // tris: 0, face_uvs: 2
+  // for data texture format, see THREE.ImageUtils.generateDataTexture
+  var data = QWT.ImageUtil.expandImageData(skin, QWT.DEFAULT_PALETTE, null, true);
+  var texture = new THREE.DataTexture(data, this.header.skin_width, this.header.skin_height, THREE.RGBAFormat);
+  texture.needsUpdate = true;
 
+  return new THREE.MeshBasicMaterial({ map: texture });
+}
+
+QuakeWebTools.MDL.prototype.toThreeBufferGeometry = function(frame_id) {
+  frame_id = (frame_id >= 0 && frame_id < this.frames.length) ? frame_id : 0;
+  var frame = this.frames[frame_id];
+
+  // expand model data
+  var triangles = this.expandTriangles();
+  var vertices = this.expandVertices(frame);
+
+  // create geometry and attributes
+  var geometry = new THREE.BufferGeometry();
+
+  var uvs = new THREE.Float32Attribute(this.header.num_tris * 3, 2);
+  var verts = new THREE.Float32Attribute(this.header.num_verts, 3);
+  var faces = new THREE.Uint8Attribute(this.header.num_tris, 3);
+
+  for (var i = 0; i < vertices.length; ++i) {
+    var v = vertices[i];
+    verts.setXYZ(i, v.x, v.y, v.z);
+  }
   for (var i = 0; i < triangles.length; ++i) {
+    // get triangle vertices a, b, c
     var tri = triangles[i];
     var a = tri.a,
         b = tri.b,
         c = tri.c;
-    var face = [type_id, a.vi, b.vi, c.vi, uvs.length];
-    uvs[uvs.length] = [a.u, a.v, b.u, b.v, c.u, c.v];
-    // add face parameters to faces array
-    for (var j = 0, fi = i * face.length; j < face.length; ++j, ++fi) {
-      faces[fi] = face[j];
-    }
+    // write uvs
+    var vi = i * 6; // 3 uvs per face
+    var arr = uvs.array;
+    arr[vi]     = a.u;
+    arr[vi + 1] = a.v;
+    arr[vi + 2] = b.u;
+    arr[vi + 3] = b.v;
+    arr[vi + 4] = c.u;
+    arr[vi + 5] = c.v;
+    // write faces (indices to verts and uvs)
+    // https://github.com/mrdoob/three.js/wiki/JSON-Model-format-3
+    var fi = i * 3;
+    var arr = faces.array;
+    // arr[fi]     = 2; // face type: face_vert_uvs
+    arr[fi + 2] = a.vi; // reverse the order for correct normals
+    arr[fi + 1] = b.vi;
+    arr[fi + 0] = c.vi;
+    // arr[fi + 4] = i;
+    // arr[fi + 5] = i + 1;
+    // arr[fi + 6] = i + 2;
   }
 
-  return {
-    "metadata": { "formatversion": 3.1 },
-    "materials": [],
-    "geometries": [
-      {
-        "type": "Geometry",
-        "data": {
-          "vertices": this.expandVertices(frame),
-          "uvs": uvs, // each is an array of three uvs (for entire face)
-          "faces": faces
-        }
-      }
-    ]
-  };
+  geometry.addAttribute("position", verts);
+  geometry.addAttribute("index", faces);
+  geometry.addAttribute("uv", uvs);
+  /*geometry.offsets = [
+    {
+      start: 0,
+      index: 0,
+      count: faces.length
+    }
+  ];*/
+
+  // update geometry
+  geometry.computeBoundingSphere();
+  geometry.computeBoundingBox();
+
+  return geometry;
 }
 
 /**

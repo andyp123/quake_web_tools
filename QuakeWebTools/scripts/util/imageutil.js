@@ -138,10 +138,11 @@ QuakeWebTools.ImageUtil.getImageDatas = function(image_infos, arraybuffer) {
 * @param {QuakeImageData} image_data The image data to expand.
 * @param {PAL} palette A 256 color palette (not required if image_data.pixel_type is ImageUtil.PIXELTYPE_RGB).
 * @param {Number} mip_level A number between 1 and 4 that lets the caller choose which pixel array to use for mip mapped textures.
-* @return {Image} Returns an Image object.
+* @param {Boolean} as_uint8_arr If this is set to a value, the return type will be a Uint8Array instead of an Image.
+* @return {Image} Returns an Image object, unless as_uint8_arr is set
 * @static
 */
-QuakeWebTools.ImageUtil.expandImageData = function(image_data, palette, mip_level) {
+QuakeWebTools.ImageUtil.expandImageData = function(image_data, palette, mip_level, as_uint8_arr) {
   var pixels;
   var width = image_data.width;
   var height = image_data.height;
@@ -154,40 +155,48 @@ QuakeWebTools.ImageUtil.expandImageData = function(image_data, palette, mip_leve
   }
   var image_size = width * height;
 
-  var canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  var ctx = canvas.getContext("2d");
-  var imgd = ctx.createImageData(width, height);
-
+  if (as_uint8_arr) {
+    var data = new Uint8Array(image_size * 4);
+  } else {
+    var canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    var ctx = canvas.getContext("2d");
+    var imgd = ctx.createImageData(width, height);
+    var data = imgd.data;
+  }
 
   // small hack for CONCHARS, which uses the wrong transparency index
   var trans_index = (image_data.name == "CONCHARS") ? 0 : 255;
+  // mip textures have no transparency
+  trans_index = (image_data.pixels2 !== undefined) ? -1 : trans_index;
 
   if (image_data.pixel_type == QuakeWebTools.ImageUtil.PIXELTYPE_PALETISED) {
     var colors = palette.colors;
     for (var i = 0; i < image_size; ++i) {
       var p = 4 * i;
       if (pixels[i] == trans_index) {
-        imgd.data[p + 3] = 0;
+        data[p + 3] = 0;
       } else {
         var c = 3 * pixels[i];
-        imgd.data[p    ] = colors[c];
-        imgd.data[p + 1] = colors[c + 1];
-        imgd.data[p + 2] = colors[c + 2];
-        imgd.data[p + 3] = 255;
+        data[p    ] = colors[c];
+        data[p + 1] = colors[c + 1];
+        data[p + 2] = colors[c + 2];
+        data[p + 3] = 255;
       }
     }
   } else {
     for (var i = 0; i < image_size; ++i) {
       var c = 3 * i;
       var p = 4 * i;
-      imgd.data[p    ] = pixels[c];
-      imgd.data[p + 1] = pixels[c + 1];
-      imgd.data[p + 2] = pixels[c + 2];
-      imgd.data[p + 3] = 255;
+      data[p    ] = pixels[c];
+      data[p + 1] = pixels[c + 1];
+      data[p + 2] = pixels[c + 2];
+      data[p + 3] = 255;
     }
   }
+
+  if (as_uint8_arr) return data;
 
   ctx.putImageData(imgd, 0, 0);
   var img = new Image();

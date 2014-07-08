@@ -164,8 +164,6 @@ function viewPAK(pak) {
   var header = pak.header;
   var directory = pak.directory;
 
-  console.log(pak.toString());
-
   var div_content = document.getElementById("file-content");
   
   // create div of links to files in the pak
@@ -184,10 +182,6 @@ function viewMDL(mdl) {
   var scene, camera, renderer;
   var geometry, material, mesh;
 
-  var loader = new THREE.ObjectLoader();
-  var mdl_json = mdl.toThreeJSON();
-  var mdl_obj = loader.parse(mdl_json);
-
   function init() {
     var div_content = document.getElementById("file-content");
     var width = div_content.offsetWidth;
@@ -196,14 +190,26 @@ function viewMDL(mdl) {
     scene = new THREE.Scene();
 
     camera = new THREE.PerspectiveCamera(75, width / height, 1, 10000);
-    camera.position.z = 1000;
+    camera.position.z = 100;
 
-    geometry = new THREE.BoxGeometry(200, 200, 200);
-    material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
-    mesh = new THREE.Mesh(geometry, material);
+    geometry = mdl.toThreeBufferGeometry();
+    //material = mdl.toThreeMaterial();
+
+    // test
+    //geometry = new THREE.BoxGeometry( 200, 200, 200 );
+    //material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
+
+    // Basic wireframe materials.
+    var darkMaterial = new THREE.MeshBasicMaterial( { color: 0xff00ff } );
+    var wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true, transparent: true } ); 
+    var multiMaterial = [ darkMaterial, wireframeMaterial ]; 
+
+    //mesh = new THREE.Mesh(geometry, material);
+    mesh = THREE.SceneUtils.createMultiMaterialObject(geometry, multiMaterial );
+    console.log(mesh);
 
     scene.add(mesh);
-    scene.add(mdl_obj);
+    mesh.rotation.x = -90 * Math.PI / 180;
 
     renderer = new THREE.CanvasRenderer();
     renderer.setSize(width, height);
@@ -215,8 +221,8 @@ function viewMDL(mdl) {
   function animate() {
     requestAnimationFrame(animate);
 
-    mesh.rotation.x += 0.01;
-    mesh.rotation.y += 0.02;
+    //mesh.rotation.x += 0.01;
+    mesh.rotation.z += 0.02;
 
     renderer.render(scene, camera);
   }
