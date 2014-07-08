@@ -66,6 +66,9 @@ QuakeWebTools.BSP.prototype.init = function() {
   this.initMiptexDirectory(ds);
 }
 
+/**
+* Initialise the mip texture directory.
+*/
 QuakeWebTools.BSP.prototype.initMiptexDirectory = function(ds) {
   // get offsets to each texture
   var base_offset = this.header.miptex.offset;
@@ -75,6 +78,7 @@ QuakeWebTools.BSP.prototype.initMiptexDirectory = function(ds) {
   // create entries
   var trim = QuakeWebTools.FileUtil.trimNullTerminatedString;
   var miptex_directory = [];
+  var garbage_entries = 0;
   for (var i = 0; i < miptex_offsets.length; ++i) {
     var offset = base_offset + miptex_offsets[i];
 
@@ -90,9 +94,22 @@ QuakeWebTools.BSP.prototype.initMiptexDirectory = function(ds) {
       name: trim(miptex.name)
     };
 
-    miptex_directory[i] = entry;
+    if (entry.name == "") {
+      garbage_entries += 1;
+      console.log("Warning: BSP miptex entry at index " + i + " is unreadable. Name: '" +  miptex.name + "'");
+      console.log(entry);
+    } else {
+      miptex_directory[i - garbage_entries] = entry;
+    }
   }
 
   this.miptex_directory = miptex_directory;
 }
 
+/**
+* Get a String representing the basic file information.
+*/
+QuakeWebTools.BSP.prototype.toString = function() {
+  var str = "BSP: '" + this.filename + "' Version " + this.header.version;
+  return str;
+}

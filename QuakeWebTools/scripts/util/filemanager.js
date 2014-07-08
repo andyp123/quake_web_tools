@@ -40,7 +40,6 @@ CLASS : FROM
   file manager must check the parent file has been loaded, then load the subfile
   via a callback.
 
-argh!
 
 dealing with duplicates
 */
