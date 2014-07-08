@@ -160,8 +160,7 @@ function app_main() {
 }
 
 
-function loadPAK(path, arraybuffer) {
-  var pak = new QuakeWebTools.PAK(path, arraybuffer);
+function viewPAK(pak) {
   var header = pak.header;
   var directory = pak.directory;
 
@@ -179,4 +178,49 @@ function loadPAK(path, arraybuffer) {
   }
 
   div_content.appendChild(ul);
+}
+
+function viewMDL(mdl) {
+  var scene, camera, renderer;
+  var geometry, material, mesh;
+
+  var loader = new THREE.ObjectLoader();
+  var mdl_json = mdl.toThreeJSON();
+  var mdl_obj = loader.parse(mdl_json);
+
+  function init() {
+    var div_content = document.getElementById("file-content");
+    var width = div_content.offsetWidth;
+    var height = 300;
+
+    scene = new THREE.Scene();
+
+    camera = new THREE.PerspectiveCamera(75, width / height, 1, 10000);
+    camera.position.z = 1000;
+
+    geometry = new THREE.BoxGeometry(200, 200, 200);
+    material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
+    mesh = new THREE.Mesh(geometry, material);
+
+    scene.add(mesh);
+    scene.add(mdl_obj);
+
+    renderer = new THREE.CanvasRenderer();
+    renderer.setSize(width, height);
+
+    div_content.appendChild(renderer.domElement);
+    //document.body.appendChild( renderer.domElement );
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+
+    mesh.rotation.x += 0.01;
+    mesh.rotation.y += 0.02;
+
+    renderer.render(scene, camera);
+  }
+
+  init();
+  animate();
 }

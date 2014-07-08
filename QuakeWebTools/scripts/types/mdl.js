@@ -157,8 +157,113 @@ QuakeWebTools.MDL.prototype.init = function() {
   }
   this.frames = frames;
   this.frame_groups = frame_groups;
+}
 
-  console.log(this);
+QuakeWebTools.MDL.prototype.expandVertices = function(frame) {
+  // get key variables in scope
+  var sx = this.header.scale.x;
+  var sy = this.header.scale.y;
+  var sz = this.header.scale.z;
+  var ox = this.header.scale_origin.x;
+  var oy = this.header.scale_origin.y;
+  var oz = this.header.scale_origin.z;
+  var num_verts = this.header.num_verts;
+
+  // expand vertices and uvs
+  var verts = [];
+
+  for (var i = 0; i < num_verts; ++i) {
+    var pv = frame.verts[i]; // packed vertex
+    var ev = { // expanded vertex
+      x: pv.x * sx + ox,
+      y: pv.y * sy + oy,
+      z: pv.z * sz + oz
+    };
+    verts[i] = ev;
+  }
+
+ return verts;
+}
+
+QuakeWebTools.MDL.prototype.expandTriangles = function() {
+  // get key variables in scope
+  var tris = this.triangles;
+  var skin_verts = this.skin_verts;
+  var skin_width = this.header.skin_width;
+  var skin_height = this.header.skin_height;
+
+  var triangles = [];
+
+  for (var i = 0; i < tris.length; ++i) {
+    var pt = tris[i];
+    var ff = pt.front_facing;
+
+    var puv = skin_verts[pt.vert_indices[0]];
+    var eva = {
+      vi: pt.vert_indices[0],
+      u: puv.s / skin_width,
+      v: puv.t / skin_height
+    };
+    if (ff && puv.onseam) { eva.u += 0.5; }
+
+    var puv = skin_verts[pt.vert_indices[1]];
+    var evb = {
+      vi: pt.vert_indices[1],
+      u: puv.s / skin_width,
+      v: puv.t / skin_height
+    };
+    if (ff && puv.onseam) { evb.u += 0.5; }
+
+    var puv = skin_verts[pt.vert_indices[2]];
+    var evc = {
+      vi: pt.vert_indices[2],
+      u: puv.s / skin_width,
+      v: puv.t / skin_height
+    };
+    if (ff && puv.onseam) { evc.u += 0.5; }
+
+    triangles[i] = {"a": eva, "b": evb, "c": evc};
+  }
+
+  return triangles;
+}
+
+
+QuakeWebTools.MDL.prototype.toThreeJSON = function(frame) {
+  frame = frame || this.frames[0];
+
+  var triangles = this.expandTriangles(); // might want to extract multiple frames
+  var uvs = [];
+  var faces = [];
+  var type_id = 2; // tris: 0, face_uvs: 2
+
+  for (var i = 0; i < triangles.length; ++i) {
+    var tri = triangles[i];
+    var a = tri.a,
+        b = tri.b,
+        c = tri.c;
+    var face = [type_id, a.vi, b.vi, c.vi, uvs.length];
+    uvs[uvs.length] = [a.u, a.v, b.u, b.v, c.u, c.v];
+    // add face parameters to faces array
+    for (var j = 0, fi = i * face.length; j < face.length; ++j, ++fi) {
+      faces[fi] = face[j];
+    }
+  }
+
+  return {
+    "metadata": { "formatversion": 3.1 },
+    "materials": [],
+    "geometries": [
+      {
+        "type": "Geometry",
+        "data": {
+          "vertices": this.expandVertices(frame),
+          "uvs": uvs, // each is an array of three uvs (for entire face)
+          "faces": faces
+        }
+      }
+    ]
+  };
 }
 
 /**

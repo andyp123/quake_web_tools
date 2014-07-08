@@ -32,24 +32,6 @@ QuakeWebTools.FileUtil.getFileObject = function(type, path, arraybuffer) {
   return null;
 };
 
-/**
-* Read a null-terminated string of maximum length from a dataview
-* @param {DataView} dataview - The DataView (or ArrayBuffer) to read characters from.
-* @param {Number} offset - Initial offset into the data view.
-* @param {Number} length - Number of bytes to read.
-* @static
-*/
-QuakeWebTools.FileUtil.getString = function(dataview, offset, length) {
-  var str = "";
-
-  for (var i = 0; i < length; ++i) {
-    var charcode = dataview.getUint8(offset + i);
-    if (charcode == 0) break;
-    str += String.fromCharCode(charcode);
-  }
-
-  return str;
-}
 
 /**
 * Trims a null-terminated string to get rid off extra garbage characters

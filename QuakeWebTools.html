@@ -8,6 +8,7 @@
 
     <!--lib-->
     <script src="QuakeWebTools/scripts/lib/DataStream.js"></script>
+    <script src="QuakeWebTools/scripts/lib/three.js"></script>
     <!--util-->
     <script src="QuakeWebTools/scripts/util/filemanager.js"></script>
     <script src="QuakeWebTools/scripts/util/fileutil.js"></script>
@@ -76,7 +77,8 @@ holder.ondrop = function (e) {
     
     switch (file_entry.type) {
     case "pak":
-      loadPAK(filename, arraybuffer);
+      var pak = file_entry.obj;
+      viewPAK(pak);
       break;
     case "wad":
       var wad = file_entry.obj;
@@ -85,6 +87,7 @@ holder.ondrop = function (e) {
       break;
     case "bsp":
       var bsp = file_entry.obj;
+      console.log(bsp);
       QWT.ImageUtil.generateHTMLPreview({image_infos: bsp.miptex_directory, arraybuffer: bsp.ab},
           QWT.DEFAULT_PALETTE, "file-content");
       break;
@@ -103,6 +106,7 @@ holder.ondrop = function (e) {
       break;
     case "mdl":
       var mdl = file_entry.obj;
+      viewMDL(mdl);
       QWT.ImageUtil.generateHTMLPreview({image_datas:mdl.skins}, QWT.DEFAULT_PALETTE, "file-content");
       break;
     default:
