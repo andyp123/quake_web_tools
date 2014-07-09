@@ -110,6 +110,7 @@ QuakeWebTools.BSP.prototype.initMiptexDirectory = function(ds) {
 * Get a String representing the basic file information.
 */
 QuakeWebTools.BSP.prototype.toString = function() {
-  var str = "BSP: '" + this.filename + "' Version " + this.header.version;
+  var str = "BSP: '" + this.filename + "' Version " + this.header.version + ", "
+      + this.miptex_directory.length + " miptex in lump";
   return str;
 }

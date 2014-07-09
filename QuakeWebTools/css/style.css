@@ -11,25 +11,24 @@ img {
 .filedrop {
     border: 2px dashed #555;
     border-radius: 8px;
+    padding-bottom: 8px;
     text-align: center;
-    font-size: 2em;
-    font-weight: bold;
     color: #555;
 }
 
 .filedrop-hover {
     border: 2px dashed white;
     border-radius: 8px;
+    padding-bottom: 8px;
     text-align: center;
-    font-size: 2em;
-    font-weight: bold;
     color: white;    
 }
 
 .item-box {
-    width: 100%;
     border: 0;
     padding: 4px;
+    margin: 0;
+    text-align: left;
 }
 
 .item-name {
@@ -42,7 +41,11 @@ img {
 
 .item-divider {
     border: 0;
-    border-bottom: 1px dashed #555;
+    border-bottom: 1px dotted #555;
+}
+
+ol, ul {
+  text-align: left;
 }
 
 a {

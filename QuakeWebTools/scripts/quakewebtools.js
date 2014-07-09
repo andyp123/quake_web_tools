@@ -167,7 +167,10 @@ function viewPAK(pak) {
   var div_content = document.getElementById("file-content");
   
   // create div of links to files in the pak
+  var div = document.createElement("div");
+  div.style = "padding: 0; margin: 0; text-align: left";
   var ul = document.createElement("ol");
+
   for (var j = 0; j < directory.length; ++j) {
     var li = document.createElement("li");
     var a = pak.getDownloadLink(directory[j]);
@@ -175,12 +178,16 @@ function viewPAK(pak) {
     ul.appendChild(li);
   }
 
-  div_content.appendChild(ul);
+  div.appendChild(ul);
+  div_content.appendChild(div);
 }
 
 function viewMDL(mdl) {
   var scene, camera, renderer;
-  var geometry, material, mesh;
+  var box, model, material, mesh, boxmesh;
+
+  var animate_id = 0;
+  var frame_id = 0;
 
   function init() {
     var div_content = document.getElementById("file-content");
@@ -190,43 +197,57 @@ function viewMDL(mdl) {
     scene = new THREE.Scene();
 
     camera = new THREE.PerspectiveCamera(75, width / height, 1, 10000);
-    camera.position.z = 100;
+    // 12 (player head)
+    // 230 (cthon)
 
-    geometry = mdl.toThreeBufferGeometry();
-    //material = mdl.toThreeMaterial();
-
-    // test
-    //geometry = new THREE.BoxGeometry( 200, 200, 200 );
-    //material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
+    box = new THREE.BoxGeometry(50, 50, 50);
+    model = mdl.toThreeBufferGeometry(0);
+    material = mdl.toThreeMaterial();
 
     // Basic wireframe materials.
-    var darkMaterial = new THREE.MeshBasicMaterial( { color: 0xff00ff } );
-    var wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true, transparent: true } ); 
-    var multiMaterial = [ darkMaterial, wireframeMaterial ]; 
+    // var darkMaterial = new THREE.MeshBasicMaterial( { color: 0xff00ff } );
+    // var wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true, transparent: true } ); 
+    // var multiMaterial = [ darkMaterial, wireframeMaterial ];
+    // boxmesh = THREE.SceneUtils.createMultiMaterialObject(box, multiMaterial);
 
-    //mesh = new THREE.Mesh(geometry, material);
-    mesh = THREE.SceneUtils.createMultiMaterialObject(geometry, multiMaterial );
-    console.log(mesh);
+    mesh = new THREE.Mesh(model, material);
 
     scene.add(mesh);
-    mesh.rotation.x = -90 * Math.PI / 180;
+    //scene.add(boxmesh);
 
-    renderer = new THREE.CanvasRenderer();
+    var radius = model.boundingSphere.radius;
+
+    camera.position.z = radius * 2;
+    mesh.rotation.x = -90 * Math.PI / 180;
+    mesh.rotation.z = -90 * Math.PI / 180;
+    mesh.position.y -= radius / 3;
+
+    renderer = new THREE.WebGLRenderer();
     renderer.setSize(width, height);
 
     div_content.appendChild(renderer.domElement);
-    //document.body.appendChild( renderer.domElement );
   }
 
   function animate() {
-    requestAnimationFrame(animate);
+    var QWT = QuakeWebTools;
+    if (QWT.STATS !== undefined) stats.begin();
 
-    //mesh.rotation.x += 0.01;
+    animate_id = requestAnimationFrame(animate);
+
     mesh.rotation.z += 0.02;
+    //boxmesh.rotation.z += 0.02;
+    var geo = mesh.geometry;
+    mdl.changeBufferGeometryFrame(geo, Math.floor(frame_id));
+    frame_id = (frame_id + 0.25) % mdl.geometry.frames.length;
 
     renderer.render(scene, camera);
+
+    if(QWT.STATS !== undefined) stats.end();
   }
 
   init();
   animate();
+
+  // need a way to deal with all these kind of "threads"
+  return animate_id;
 }

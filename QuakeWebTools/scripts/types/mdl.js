@@ -124,9 +124,14 @@ QuakeWebTools.MDL.prototype.init = function() {
   this.skins = skins;
   this.skin_groups = skin_groups;
 
+  // read geometry
+  var geometry = {
+    expanded: false
+  };
+
   // read skin verts and triangles
-  this.skin_verts = ds.readType(["[]", QWT.MDL.SKINVERT_T, this.header.num_verts]);
-  this.triangles = ds.readType(["[]", QWT.MDL.TRIANGLE_T, this.header.num_tris]);
+  geometry.skin_verts = ds.readType(["[]", QWT.MDL.SKINVERT_T, this.header.num_verts]);
+  geometry.triangles = ds.readType(["[]", QWT.MDL.TRIANGLE_T, this.header.num_tris]);
 
   // read frames
   var frames = [];
@@ -155,82 +160,93 @@ QuakeWebTools.MDL.prototype.init = function() {
       frames[frames.length] = frame;
     }
   }
-  this.frames = frames;
-  this.frame_groups = frame_groups;
+  geometry.frames = frames;
+  geometry.frame_groups = frame_groups;
+
+  this.expandGeometry(geometry);
 }
 
-QuakeWebTools.MDL.prototype.expandVertices = function(frame) {
-  // get key variables in scope
+QuakeWebTools.MDL.prototype.expandGeometry = function(geometry) {
+  var triangles = geometry.triangles;
+  var skin_verts = geometry.skin_verts;
+  var num_tris = triangles.length;
+  var sw = this.header.skin_width;
+  var sh = this.header.skin_height;
+
+  // expand uvs
+  var uvs = new Float32Array(num_tris * 6); // 3 per face, size 2 (u, v)
+  for (var i = 0; i < num_tris; ++i) {
+    var t = triangles[i];
+    var ff = t.front_facing;
+    var a = t.vert_indices[0];
+    var b = t.vert_indices[1];
+    var c = t.vert_indices[2];
+
+    var idx, uv;
+    idx = i * 6;
+    uv = skin_verts[c];
+    uvs[idx + 0] = (!ff && uv.onseam) ? uv.s / sw + 0.5 : uv.s / sw;
+    uvs[idx + 1] = 1 - uv.t / sh; // uvs are upside down so invert
+    uv = skin_verts[b];
+    uvs[idx + 2] = (!ff && uv.onseam) ? uv.s / sw + 0.5 : uv.s / sw;
+    uvs[idx + 3] = 1 - uv.t / sh;
+    uv = skin_verts[a];
+    uvs[idx + 4] = (!ff && uv.onseam) ? uv.s / sw + 0.5 : uv.s / sw;
+    uvs[idx + 5] = 1 - uv.t / sh;
+  }
+
+  // expand frames
   var sx = this.header.scale.x;
   var sy = this.header.scale.y;
   var sz = this.header.scale.z;
   var ox = this.header.scale_origin.x;
   var oy = this.header.scale_origin.y;
   var oz = this.header.scale_origin.z;
-  var num_verts = this.header.num_verts;
 
-  // expand vertices and uvs
-  var verts = [];
+  var frames = geometry.frames;
+  var new_frames = [];
+  for (var j = 0; j < frames.length; ++j) {
+    var f = frames[j];
+    var verts = new Float32Array(num_tris * 9); // 3 per face, size 3 (x, y, z)
 
-  for (var i = 0; i < num_verts; ++i) {
-    var pv = frame.verts[i]; // packed vertex
-    var ev = { // expanded vertex
-      x: pv.x * sx + ox,
-      y: pv.y * sy + oy,
-      z: pv.z * sz + oz
+    for (var i = 0; i < num_tris; ++i) {
+      var t = triangles[i];
+      var a = t.vert_indices[0];
+      var b = t.vert_indices[1];
+      var c = t.vert_indices[2];
+
+      var idx, vert;
+      idx = i * 9;
+      vert = f.verts[c];
+      verts[idx + 0] = vert.x * sx + ox;
+      verts[idx + 1] = vert.y * sy + oy;
+      verts[idx + 2] = vert.z * sz + oz;
+      vert = f.verts[b];
+      verts[idx + 3] = vert.x * sx + ox;
+      verts[idx + 4] = vert.y * sy + oy;
+      verts[idx + 5] = vert.z * sz + oz;
+      vert = f.verts[a];
+      verts[idx + 6] = vert.x * sx + ox;
+      verts[idx + 7] = vert.y * sy + oy;
+      verts[idx + 8] = vert.z * sz + oz;
+    }
+
+    new_frames[j] = {
+      name: f.name,
+      verts: verts
     };
-    verts[i] = ev;
   }
 
- return verts;
-}
-
-QuakeWebTools.MDL.prototype.expandTriangles = function() {
-  // get key variables in scope
-  var tris = this.triangles;
-  var skin_verts = this.skin_verts;
-  var skin_width = this.header.skin_width;
-  var skin_height = this.header.skin_height;
-
-  var triangles = [];
-
-  for (var i = 0; i < tris.length; ++i) {
-    var pt = tris[i];
-    var ff = pt.front_facing;
-
-    var puv = skin_verts[pt.vert_indices[0]];
-    var eva = {
-      vi: pt.vert_indices[0],
-      u: puv.s / skin_width,
-      v: puv.t / skin_height
-    };
-    if (ff && puv.onseam) { eva.u += 0.5; }
-
-    var puv = skin_verts[pt.vert_indices[1]];
-    var evb = {
-      vi: pt.vert_indices[1],
-      u: puv.s / skin_width,
-      v: puv.t / skin_height
-    };
-    if (ff && puv.onseam) { evb.u += 0.5; }
-
-    var puv = skin_verts[pt.vert_indices[2]];
-    var evc = {
-      vi: pt.vert_indices[2],
-      u: puv.s / skin_width,
-      v: puv.t / skin_height
-    };
-    if (ff && puv.onseam) { evc.u += 0.5; }
-
-    triangles[i] = {"a": eva, "b": evb, "c": evc};
-  }
-
-  return triangles;
+  this.geometry = {
+    uvs: uvs,
+    frames: new_frames,
+    frame_groups: geometry.frame_groups,
+    expanded: true
+  };
 }
 
 QuakeWebTools.MDL.prototype.toThreeMaterial = function(skin_id) {
   var QWT = QuakeWebTools;
-
   skin_id = (skin_id >= 0 && skin_id < this.skins.length) ? skin_id : 0;
   var skin = this.skins[skin_id];
 
@@ -242,69 +258,24 @@ QuakeWebTools.MDL.prototype.toThreeMaterial = function(skin_id) {
   return new THREE.MeshBasicMaterial({ map: texture });
 }
 
-QuakeWebTools.MDL.prototype.toThreeBufferGeometry = function(frame_id) {
-  frame_id = (frame_id >= 0 && frame_id < this.frames.length) ? frame_id : 0;
-  var frame = this.frames[frame_id];
-
-  // expand model data
-  var triangles = this.expandTriangles();
-  var vertices = this.expandVertices(frame);
-
-  // create geometry and attributes
+QuakeWebTools.MDL.prototype.toThreeBufferGeometry = function() {
   var geometry = new THREE.BufferGeometry();
-
-  var uvs = new THREE.Float32Attribute(this.header.num_tris * 3, 2);
-  var verts = new THREE.Float32Attribute(this.header.num_verts, 3);
-  var faces = new THREE.Uint8Attribute(this.header.num_tris, 3);
-
-  for (var i = 0; i < vertices.length; ++i) {
-    var v = vertices[i];
-    verts.setXYZ(i, v.x, v.y, v.z);
+  geometry.attributes = {
+    position: { itemSize: 3, array: this.geometry.frames[0].verts },
+    uv: { itemSize: 2, array: this.geometry.uvs }
   }
-  for (var i = 0; i < triangles.length; ++i) {
-    // get triangle vertices a, b, c
-    var tri = triangles[i];
-    var a = tri.a,
-        b = tri.b,
-        c = tri.c;
-    // write uvs
-    var vi = i * 6; // 3 uvs per face
-    var arr = uvs.array;
-    arr[vi]     = a.u;
-    arr[vi + 1] = a.v;
-    arr[vi + 2] = b.u;
-    arr[vi + 3] = b.v;
-    arr[vi + 4] = c.u;
-    arr[vi + 5] = c.v;
-    // write faces (indices to verts and uvs)
-    // https://github.com/mrdoob/three.js/wiki/JSON-Model-format-3
-    var fi = i * 3;
-    var arr = faces.array;
-    // arr[fi]     = 2; // face type: face_vert_uvs
-    arr[fi + 2] = a.vi; // reverse the order for correct normals
-    arr[fi + 1] = b.vi;
-    arr[fi + 0] = c.vi;
-    // arr[fi + 4] = i;
-    // arr[fi + 5] = i + 1;
-    // arr[fi + 6] = i + 2;
-  }
-
-  geometry.addAttribute("position", verts);
-  geometry.addAttribute("index", faces);
-  geometry.addAttribute("uv", uvs);
-  /*geometry.offsets = [
-    {
-      start: 0,
-      index: 0,
-      count: faces.length
-    }
-  ];*/
-
-  // update geometry
   geometry.computeBoundingSphere();
   geometry.computeBoundingBox();
 
   return geometry;
+}
+
+QuakeWebTools.MDL.prototype.changeBufferGeometryFrame = function(geometry, frame_id) {
+  frame_id = (frame_id >= 0 && frame_id < this.geometry.frames.length) ? frame_id : 0;
+  var verts = this.geometry.frames[frame_id].verts;
+
+  geometry.attributes.position.array = verts;
+  geometry.attributes.position.needsUpdate = true;
 }
 
 /**

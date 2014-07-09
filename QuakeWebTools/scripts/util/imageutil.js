@@ -249,7 +249,10 @@ QuakeWebTools.ImageUtil.generateHTMLPreview = function(images, palette, element_
     div.appendChild(img);
     div.innerHTML += "<br><span class='item-name'>" + image_data.name
                    + "</span><span class='item-info'>" + img_info
-                   + "</span><hr class='item-divider'>";
+                   + "</span>";
+    if (i < limit - 1) {
+      div.innerHTML += "<hr class='item-divider'>";
+    }
     fragment.appendChild(div);
   }
 

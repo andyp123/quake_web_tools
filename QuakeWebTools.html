@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="QuakeWebTools/css/style.css">
 
     <!--lib-->
+    <script src="QuakeWebTools/scripts/lib/stats.min.js"></script>
     <script src="QuakeWebTools/scripts/lib/DataStream.js"></script>
     <script src="QuakeWebTools/scripts/lib/three.js"></script>
     <!--util-->
@@ -25,19 +26,20 @@
     <script src="QuakeWebTools/scripts/quakewebtools.js"></script>
   </head>
 
-  <body onload="app_init()" style="width: 500px">
+  <body onload="app_init()" style="width: 540px">
 
     <article>
-      <div id="holder" class="filedrop" style="height: 100px">
-        <p>DROP FILES HERE</p>
+      <div id="holder" class="filedrop" style="min-height: 100px">
+        <h1 style="font-size: 2em">DROP FILES HERE</h1>
+        <p>Drag Quake file format files (pak, wad, bsp, lmp, spr, mdl, map,
+        pal) into this area to load their content in your browser.</p>
+        <div id="file-content" class="" style="border:0">
+        </div>
       </div> 
       <p id="status">File API and FileReader API not supported</p>
-      <p>Drag Quake file format files (pak, wad, bsp, lmp, spr, mdl, map,
-      pal) into the area above to load their content in your browser.</p>
     </article>
 
-    <div id="file-content" style="border:0">
-    </div>
+
 
   </body>
 </html>
@@ -46,6 +48,19 @@
 
 <!-- TODO: Clean up this mess and put it in a better location -->
 <script>
+
+
+// stats
+if (0) {
+  var stats = new Stats();
+  stats.setMode(1); // 0: fps, 1: ms
+  // Align top-left
+  stats.domElement.style.position = 'absolute';
+  stats.domElement.style.left = '0px';
+  stats.domElement.style.top = '0px';
+  document.body.appendChild( stats.domElement );
+  QuakeWebTools.STATS = stats;
+}
 
 var holder = document.getElementById('holder');
 var state = document.getElementById('status');
@@ -73,6 +88,13 @@ holder.ondrop = function (e) {
     var filename = file_entry.path;
     var arraybuffer = file_entry.data;
 
+    // will need a proper system to deal with these for multiple viewers
+    if (QWT.ANIMATION_ID != null) {
+      console.log("stopping animationFrame " + QWT.ANIMATION_ID);
+      cancelAnimationFrame(QWT.ANIMATION_ID);
+      QWT.ANIMATION_ID = null;
+    }
+
     document.getElementById("file-content").innerHTML = "";
     
     switch (file_entry.type) {
@@ -87,7 +109,6 @@ holder.ondrop = function (e) {
       break;
     case "bsp":
       var bsp = file_entry.obj;
-      console.log(bsp);
       QWT.ImageUtil.generateHTMLPreview({image_infos: bsp.miptex_directory, arraybuffer: bsp.ab},
           QWT.DEFAULT_PALETTE, "file-content");
       break;
@@ -95,18 +116,18 @@ holder.ondrop = function (e) {
       var spr = file_entry.obj;
       break;
     case "lmp":
-      var image_data = QWT.ImageUtil.getImageData(filename, arraybuffer);
-      var img = QWT.ImageUtil.expandImageData(image_data, QWT.DEFAULT_PALETTE);
-      document.getElementById("file-content").appendChild(img);
+      var image_datas = [QWT.ImageUtil.getImageData(filename, arraybuffer)];
+      QWT.ImageUtil.generateHTMLPreview({image_datas: image_datas},
+          QWT.DEFAULT_PALETTE, "file-content");
       break;
     case "pal":
-      var image_data = QWT.ImageUtil.getImageData(filename, arraybuffer);
-      var img = QWT.ImageUtil.expandImageData(image_data);
-      document.getElementById("file-content").appendChild(img);
+      var image_datas = [QWT.ImageUtil.getImageData(filename, arraybuffer)];
+      QWT.ImageUtil.generateHTMLPreview({image_datas: image_datas},
+          QWT.DEFAULT_PALETTE, "file-content");
       break;
     case "mdl":
       var mdl = file_entry.obj;
-      viewMDL(mdl);
+      QWT.ANIMATION_ID = viewMDL(mdl);
       QWT.ImageUtil.generateHTMLPreview({image_datas:mdl.skins}, QWT.DEFAULT_PALETTE, "file-content");
       break;
     default:
