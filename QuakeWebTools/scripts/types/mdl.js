@@ -239,6 +239,7 @@ QuakeWebTools.MDL.prototype.expandGeometry = function(geometry) {
 
   this.geometry = {
     uvs: uvs,
+    verts_lerped: new Float32Array(num_tris * 9), // for lerping between frames
     frames: new_frames,
     frame_groups: geometry.frame_groups,
     expanded: true
@@ -247,7 +248,8 @@ QuakeWebTools.MDL.prototype.expandGeometry = function(geometry) {
 
 QuakeWebTools.MDL.prototype.toThreeMaterial = function(skin_id) {
   var QWT = QuakeWebTools;
-  skin_id = (skin_id >= 0 && skin_id < this.skins.length) ? skin_id : 0;
+
+  skin_id = skin_id || 0;
   var skin = this.skins[skin_id];
 
   // for data texture format, see THREE.ImageUtils.generateDataTexture
@@ -270,11 +272,27 @@ QuakeWebTools.MDL.prototype.toThreeBufferGeometry = function() {
   return geometry;
 }
 
-QuakeWebTools.MDL.prototype.changeBufferGeometryFrame = function(geometry, frame_id) {
-  frame_id = (frame_id >= 0 && frame_id < this.geometry.frames.length) ? frame_id : 0;
+QuakeWebTools.MDL.prototype.setBufferGeometryFrame = function(geometry, frame_id) {
   var verts = this.geometry.frames[frame_id].verts;
 
   geometry.attributes.position.array = verts;
+  geometry.attributes.position.needsUpdate = true;
+}
+
+QuakeWebTools.MDL.prototype.blendBufferGeometryFrame = function(geometry, frame_id_float) {
+  var frames = this.geometry.frames;
+
+  var frame_id = Math.floor(frame_id_float);
+  var t = frame_id_float - frame_id;
+  var verts1 = frames[frame_id].verts;
+  var verts2 = frames[(frame_id + 1) % frames.length].verts;
+
+  var vertsb = this.geometry.verts_lerped;
+  for (var i = 0; i < vertsb.length; ++i) {
+    vertsb[i] = verts1[i] + (verts2[i] - verts1[i]) * t;
+  }
+
+  geometry.attributes.position.array = vertsb;
   geometry.attributes.position.needsUpdate = true;
 }
 

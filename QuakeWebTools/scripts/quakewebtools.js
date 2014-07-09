@@ -235,9 +235,9 @@ function viewMDL(mdl) {
     animate_id = requestAnimationFrame(animate);
 
     mesh.rotation.z += 0.02;
-    //boxmesh.rotation.z += 0.02;
+
     var geo = mesh.geometry;
-    mdl.changeBufferGeometryFrame(geo, Math.floor(frame_id));
+    mdl.blendBufferGeometryFrame(geo, frame_id);
     frame_id = (frame_id + 0.25) % mdl.geometry.frames.length;
 
     renderer.render(scene, camera);
