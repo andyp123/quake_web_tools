@@ -207,10 +207,11 @@ function viewMDL(mdl) {
     // Basic wireframe materials.
     // var darkMaterial = new THREE.MeshBasicMaterial( { color: 0xff00ff } );
     // var wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true, transparent: true } ); 
-    // var multiMaterial = [ darkMaterial, wireframeMaterial ];
-    // boxmesh = THREE.SceneUtils.createMultiMaterialObject(box, multiMaterial);
-
+    // var multiMaterial = [ material, wireframeMaterial ];
+    // mesh = THREE.SceneUtils.createMultiMaterialObject(model, multiMaterial);
     mesh = new THREE.Mesh(model, material);
+
+    // console.log(mesh);
 
     scene.add(mesh);
     //scene.add(boxmesh);
@@ -236,8 +237,7 @@ function viewMDL(mdl) {
 
     mesh.rotation.z += 0.02;
 
-    var geo = mesh.geometry;
-    mdl.blendBufferGeometryFrame(geo, frame_id);
+    mdl.blendBufferGeometryFrame(model, frame_id);
     frame_id = (frame_id + 0.25) % mdl.geometry.frames.length;
 
     renderer.render(scene, camera);
