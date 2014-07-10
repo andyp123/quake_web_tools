@@ -1,27 +1,5 @@
 var QuakeWebTools = QuakeWebTools || {};
 
-/*
-typedef struct
-{ long id;                     // 0x4F504449 = "IDPO" for IDPOLYGON
-  long version;                // Version = 6
-  vec3_t scale;                // Model scale factors.
-  vec3_t origin;               // Model origin.
-  scalar_t radius;             // Model bounding radius.
-  vec3_t offsets;              // Eye position (useless?)
-  long numskins ;              // the number of skin textures
-  long skinwidth;              // Width of skin texture
-                               //           must be multiple of 8
-  long skinheight;             // Height of skin texture
-                               //           must be multiple of 8
-  long numverts;               // Number of vertices
-  long numtris;                // Number of triangles surfaces
-  long numframes;              // Number of frames
-  long synctype;               // 0= synchron, 1= random
-  long flags;                  // 0 (see Alias models)
-  scalar_t size;               // average size of triangles
-} mdl_t;
-*/
-
 /**
 * MDL file representation.
 * @constructor

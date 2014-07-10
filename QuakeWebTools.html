@@ -114,6 +114,9 @@ holder.ondrop = function (e) {
       break;
     case "spr":
       var spr = file_entry.obj;
+      var image_datas = spr.getImageData();
+      QWT.ImageUtil.generateHTMLPreview({image_datas: image_datas},
+          QWT.DEFAULT_PALETTE, "file-content");
       break;
     case "lmp":
       var image_datas = [QWT.ImageUtil.getImageData(filename, arraybuffer)];
