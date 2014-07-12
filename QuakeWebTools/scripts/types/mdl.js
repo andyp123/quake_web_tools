@@ -87,7 +87,8 @@ QuakeWebTools.MDL.prototype.init = function() {
       num_skins = ds.readInt32();
       var skin_group = {
         index: skins.length,
-        num_skins: num_skins
+        num_skins: num_skins,
+        times: ds.readType(["[]", "float32", num_skins])
       };
       skin_groups[skin_groups.length] = skin_group;
     }
