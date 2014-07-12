@@ -143,6 +143,7 @@ function app_init() {
       console.log("GROUP 2 LOADED");
     }]);
 */
+
   G.FILEMANAGER.loadAllQueued();
 }
 
@@ -152,11 +153,10 @@ function app_main() {
   var QWT = QuakeWebTools;
   var G = QuakeWebTools.GLOBAL;
 
-  var pak =  G.FILEMANAGER.getFile("id1/pak0.pak", "obj");
-  if (pak) {
-    pak.generateFileLinks("file-content");
-  }
-
+  // tests
+  var path = "id1/pak0.pak|maps/e1m1.bsp|CLIP";
+  var path_info = QuakeWebTools.FileUtil.getPathInfo(path);
+  //console.log(path_info);
 }
 
 
@@ -185,6 +185,7 @@ function viewPAK(pak) {
 function viewMDL(mdl) {
   var scene, camera, renderer;
   var box, model, material, mesh, boxmesh;
+  var controls;
 
   var animate_id = 0;
   var frame_id = 0;
@@ -227,18 +228,39 @@ function viewMDL(mdl) {
     renderer.setSize(width, height);
 
     div_content.appendChild(renderer.domElement);
+
+    // trackballcontrols
+    var target = mdl.getAverageCenter();
+    controls = new THREE.TrackballControls( camera );
+    controls.target.set(0, 0, 0);
+    //controls.target.set( target.x, target.y, target.z );
+
+    controls.rotateSpeed = 1.0;
+    controls.zoomSpeed = 1.2;
+    controls.panSpeed = 0.8;
+
+    controls.noZoom = false;
+    controls.noPan = false;
+
+    controls.staticMoving = false;
+    controls.dynamicDampingFactor = 0.15;
+
+    controls.keys = [ 65, 83, 68 ];
+
   }
 
   function animate() {
     var QWT = QuakeWebTools;
     if (QWT.STATS !== undefined) stats.begin();
 
+    controls.update();
+
     animate_id = requestAnimationFrame(animate);
 
-    mesh.rotation.z += 0.02;
+    //mesh.rotation.z += 0.02;
 
     mdl.blendBufferGeometryFrame(model, frame_id);
-    frame_id = (frame_id + 0.25) % mdl.geometry.frames.length;
+    frame_id = (frame_id + 1/6) % mdl.geometry.frames.length; // assuming 60fps
 
     renderer.render(scene, camera);
 

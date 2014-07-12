@@ -40,6 +40,17 @@ CLASS : FROM
   file manager must check the parent file has been loaded, then load the subfile
   via a callback.
 
+each loaded file stores the following:
+name : name of the item
+  PAK -> filename (with extension)
+  WAD -> texturename
+extension : extension/filetype
+path : full path to the item
+  normal file -> id1/maps/e1m1.bsp
+  contained -> id1/pak0.pak|maps/e1m1.bsp
+            -> id1/pak0.pak|gfx.wad|CONCHARS
+
+
 
 dealing with duplicates
 */
@@ -314,6 +325,9 @@ QuakeWebTools.FileManager.prototype.clearAllQueued = function() {
   }
 }
 
+/**
+* Return a string representation of the File Manager
+*/
 QuakeWebTools.FileManager.prototype.toString = function() {
   var str = "FileManager:\n";
   var entry;  

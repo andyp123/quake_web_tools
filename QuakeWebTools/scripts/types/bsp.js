@@ -1,5 +1,17 @@
 var QuakeWebTools = QuakeWebTools || {};
 
+/*
+need to parse bsp and organise into geometry sutiable for displaying with
+three.js buffer geometries. Note that what will probably need to happen is
+for it to be separated into different buffers by texture, unless I can figure
+out how to get multiple materials on one BufferGeometry
+
+file type idea:
+completely OT, but how about a binary file with an UTF-8 JSON header that
+defines the file structure. This way the header is readable and the data is
+nicely compressed and structured.
+*/
+
 /**
 * BSP file representation.
 * @constructor

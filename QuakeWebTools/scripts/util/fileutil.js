@@ -47,6 +47,78 @@ QuakeWebTools.FileUtil.trimNullTerminatedString = function(str) {
 }
 
 /**
+* Split a path into an object containing the components of the path.
+* Assumes the path points to a file, so the returned components will always
+* have a filename parameter, even for a string like "CONCHARS".
+* @param {String} path The path to process.
+* @return {Object} The processed path.
+* @static
+*/
+QuakeWebTools.FileUtil.getPathComponents = function(path) {
+  var components = {
+    full_path: path,
+    path_root: "",
+    filename: "",
+    extension: ""
+  }
+  var index_dot = path.lastIndexOf(".");
+  if (index_dot != -1) {
+    components.extension = path.substring(index_dot + 1);
+    path = path.substring(0, index_dot);
+  }
+  var index_slash = path.lastIndexOf("/");
+  if (index_slash != -1) {
+    components.path_root = path.substring(0, index_slash + 1);
+    path = path.substring(index_slash + 1);
+  }
+  components.filename = path;
+
+  return components;
+}
+
+/**
+* Split a path into a list of path components; One for each sub path.
+* Sub paths are denoted by the | character.
+* @param {String} path The path to process.
+* @return {Object} The processed path.
+* @static
+*/
+QuakeWebTools.FileUtil.getPathInfo = function(path) {
+  var path_info = {
+    full_path: path,
+    sub_paths: []
+  };
+
+  // split by |
+  var path_strings = [];
+  var split_index = path.indexOf("|");
+  while (split_index != -1) {
+    path_strings[path_strings.length] = path.substring(0, split_index);
+    path = path.substring(split_index + 1);
+    split_index = path.indexOf("|");
+  }
+  path_strings[path_strings.length] = path;
+
+  var getPathComponents = QuakeWebTools.FileUtil.getPathComponents;
+  var sub_paths = path_info.sub_paths;
+  for (var i = 0; i < path_strings.length; ++i) {
+    sub_paths[i] = getPathComponents(path_strings[i]);
+  }
+
+  return path_info;
+}
+
+// TODO: remove the following two functions
+
+QuakeWebTools.FileUtil.getExtension = function(path) {
+  var index_dot = path.lastIndexOf(".");
+  if (index_dot != -1) {
+    return path.substring(index_dot + 1);
+  }
+  return "";
+}
+
+/**
 * Get just the filename component of a path.
 * @param {String} path File path.
 * @return {String} The filename. This assumes there might be no extension.
@@ -81,65 +153,6 @@ QuakeWebTools.FileUtil.getFilenameNoExtension = function(path) {
   return path;
 }
 
-/**
-* Get just the directory component of a path.
-* @param {String} path File path.
-* @return {String} The directory or "" if there is none.
-* @static
-*/
-QuakeWebTools.FileUtil.getDirectory = function(path) {
-  var index = path.lastIndexOf(".");
-      
-  if (index != -1) {
-    index = path.lastIndexOf("/");
-    return (index != -1) ? path.substring(0, index + 1) : "";
-  }
-  return path;
-}
-
-/**
-* Get just the file extension from a path.
-* @param {String} path File path.
-* @return {String} The file extension or "" if there is none.
-* @static
-*/
-QuakeWebTools.FileUtil.getExtension = function(path) {
-  var index = path.lastIndexOf(".");
-
-  if (index != -1) {
-    return path.substring(index + 1).toLowerCase(); // for comparisons
-  }
-  return "";
-}
-
-// TODO: remove this function?
-/**
-* Splits a string containing a path, filename and extension into components. Components
-* not present in the path will be left as empty strings.
-* @param {String} path - A path to a file.
-* @returns {Object} Returns an object in the form {path, filename, extension}
-* @static
-*/
-QuakeWebTools.FileUtil.getDirectoryFilenameExtension = function(path) {
-  var rv = {path: "", filename:"", extension:""};    
-  var index_dot = path.lastIndexOf(".");
-  var index_slash = path.lastIndexOf("/");
-
-  if (index_dot != -1) {
-    rv.extension = path.substring(index_dot + 1);
-    path = path.substring(0, index_dot);
-    if (index_slash != -1) {
-      rv.filename = path.substring(index_slash + 1);
-      rv.path = path.substring(0, index_slash + 1);
-    } else {
-      rv.filename = path;
-    }
-  } else {
-    rv.path = path;
-  }
-
-  return rv;
-}
 
 /**
 * Simple file loading helper.

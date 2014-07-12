@@ -141,7 +141,8 @@ QuakeWebTools.MDL.prototype.init = function() {
   geometry.frames = frames;
   geometry.frame_groups = frame_groups;
 
-  this.expandGeometry(geometry);
+  this.geometry = this.expandGeometry(geometry);
+  this.animations = this.detectAnimations();
 }
 
 QuakeWebTools.MDL.prototype.expandGeometry = function(geometry) {
@@ -215,12 +216,60 @@ QuakeWebTools.MDL.prototype.expandGeometry = function(geometry) {
     };
   }
 
-  this.geometry = {
+  return {
     uvs: uvs,
     frames: new_frames,
     frame_groups: geometry.frame_groups,
     expanded: true
   };
+}
+
+QuakeWebTools.MDL.prototype.detectAnimations = function() {
+  var anims = {};
+  var frames = this.geometry.frames;
+
+  var notNumber = function(charcode) {
+    return (charcode < 48 || charcode > 57);
+  } 
+
+  for (var i = 0; i < frames.length; ++i) {
+    var name = frames[i].name;
+    for (var c = name.length - 1; c >= 0; --c) {
+      if (notNumber(name.charCodeAt(c))) break;
+    }
+    var name_base = name.substring(0, c + 1);
+    var anim = anims[name_base];
+    if (anim === undefined) {
+      anims[name_base] = {
+        start: i,
+        length: 1
+      }
+    } else {
+      anim.length += 1;
+    }
+  }
+
+  return anims;
+}
+
+QuakeWebTools.MDL.prototype.getAverageCenter = function(frame_id) {
+  frame_id = frame_id || 0;
+  var verts = this.geometry.frames[0].verts;
+  var average = {x: 0, y: 0, z: 0};
+
+  var limit = Math.floor(verts.length / 3);
+  for (var i = 0; i < limit; ++i) {
+    var vi = i * 3;
+    average.x += verts[vi];
+    average.y += verts[vi + 1];
+    average.z += verts[vi + 2];
+  }
+
+  average.x /= limit;
+  average.y /= limit;
+  average.z /= limit;
+
+  return average;
 }
 
 QuakeWebTools.MDL.prototype.toThreeMaterial = function(skin_id) {
