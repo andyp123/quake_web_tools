@@ -229,40 +229,24 @@ function viewMDL(mdl) {
 
     div_content.appendChild(renderer.domElement);
 
-    // trackballcontrols
-    var target = mdl.getAverageCenter();
-    controls = new THREE.TrackballControls( camera );
-    controls.target.set(0, 0, 0);
-    //controls.target.set( target.x, target.y, target.z );
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.addEventListener( 'change', render );
+  }
 
-    controls.rotateSpeed = 1.0;
-    controls.zoomSpeed = 1.2;
-    controls.panSpeed = 0.8;
-
-    controls.noZoom = false;
-    controls.noPan = false;
-
-    controls.staticMoving = false;
-    controls.dynamicDampingFactor = 0.15;
-
-    controls.keys = [ 65, 83, 68 ];
-
+  function render() {
+    renderer.render(scene, camera);
   }
 
   function animate() {
     var QWT = QuakeWebTools;
     if (QWT.STATS !== undefined) stats.begin();
 
-    controls.update();
-
     animate_id = requestAnimationFrame(animate);
-
-    //mesh.rotation.z += 0.02;
 
     mdl.blendBufferGeometryFrame(model, frame_id);
     frame_id = (frame_id + 1/6) % mdl.geometry.frames.length; // assuming 60fps
 
-    renderer.render(scene, camera);
+    render();
 
     if(QWT.STATS !== undefined) stats.end();
   }
