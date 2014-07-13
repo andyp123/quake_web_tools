@@ -17,9 +17,9 @@ QuakeWebTools.MDL = function(path, arraybuffer) {
 }
 
 QuakeWebTools.MDL.VECTOR3_T = [
-  "x", "float32",
-  "y", "float32",
-  "z", "float32"
+  "x",                "float32",
+  "y",                "float32",
+  "z",                "float32"
 ];
 
 QuakeWebTools.MDL.VERTEX_T = [
