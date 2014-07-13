@@ -34,9 +34,6 @@ QuakeWebTools.BSP = function(path, arraybuffer) {
   this.filename = QuakeWebTools.FileUtil.getFilename(path);
   this.ab = arraybuffer;
 
-  this.header = null;
-  this.directory = null;
-
   this.init();
 }
 
@@ -205,6 +202,70 @@ QuakeWebTools.BSP.prototype.initGeometry = function(ds) {
 /**
 * Expand the raw geometry into something useable by THREE.js
 */
+QuakeWebTools.BSP.prototype.getSeparatedFacesPerTexture = function(geometry, model) {
+  var texinfos = geometry.texinfos;
+  var faces = geometry.faces;
+
+  var face_id_lists = {}; // important to note that this is a hash
+
+  var start = model.face_id;
+  var end = start + model.num_faces;
+  for (var i = start; i < end; ++i) {
+    var face = faces[i];
+    var tex_id = texinfos[face.texinfo_id].tex_id;
+    var face_ids = face_id_lists[i] || { ids: [], num_verts: 0 };
+    face_ids.ids[face_ids.ids.length] = i;
+    face_ids.num_verts += face.num_edges; // can plan ahead...
+    face_id_lists[i] = face_ids;
+  }
+
+  return face_id_lists;
+}
+
+QuakeWebTools.BSP.prototype.getNumTris = function(faces, face_ids) {
+  var num_tris = 0;
+  
+  for (var i = 0; i < face_ids.length; ++i) {
+    var face = faces[face_ids[i]];
+    num_tris += face.num_edges - 2;
+  }
+
+  return num_tris;
+}
+
+QuakeWebTools.BSP.prototype.getFaceVerts = function(geometry, face) {
+  var edge_list = geometry.edge_list;
+  var edges = geometry.edges;
+  var vertices = geometry.vertices;
+
+  var verts = [];
+  var start = face.edge_id;
+  var end = start + face.num_edges;
+  for (var i = start; i < end; ++i) {
+    var edge_id = edge_list[i];
+    var edge = edges[Math.abs(edge_id)];
+    var id_a, id_b;
+    if (edge_id > 0) {
+      id_a = edge.v1;
+      id_b = edge.v2;
+    } else {
+      id_a = edge.v2;
+      id_b = edge.v1;
+    }
+    verts[verts.length] = vertices[id_a];
+    if (i < end - 1) {
+      verts[verts.length] = vertices[id_b];
+    }
+  }
+
+  return verts;
+}
+
+
+QuakeWebTools.BSP.prototype.expandModel = function(geometry, model) {
+
+}
+
 QuakeWebTools.BSP.prototype.expandGeometry = function(geometry) {
   return geometry;
 }

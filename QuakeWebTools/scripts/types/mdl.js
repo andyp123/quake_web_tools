@@ -9,10 +9,7 @@ var QuakeWebTools = QuakeWebTools || {};
 QuakeWebTools.MDL = function(path, arraybuffer) {
   this.filename = QuakeWebTools.FileUtil.getFilename(path);
   this.ab = arraybuffer;
-
-  this.header = null;
-  this.skins = [];
-
+  
   this.init();
 }
 
