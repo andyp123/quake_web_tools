@@ -3,7 +3,7 @@
 	[
 		{
 			"follow_symlinks": true,
-			"path": "/Applications/Quake/QuakeWebTools",
+			"path": "../",
       "folder_exclude_patterns":
       [
         "data_test"
@@ -11,14 +11,14 @@
 		},
 		{
 			"follow_symlinks": true,
-			"path": "/Applications/Quake",
+			"path": "../../",
       "folder_exclude_patterns":
       [
-        "*"
+        "/*"
       ],
       "file_exclude_patterns":
       [
-        "*.pak", "*.txt", "*.TXT"
+        "*.pak", "*.txt", "*.TXT", "quakespasm", "README*"
       ],
       "binary_file_patterns":
       [

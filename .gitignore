@@ -9,5 +9,6 @@
 # binary files for testing go here
 QuakeWebTools/data_test/
 
-# useless auto-generated OS files
+# uneccessary auto-generated files
 *.DS_Store
+*.sublime-workspace

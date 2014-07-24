@@ -472,42 +472,18 @@
 	"buffers":
 	[
 		{
-			"file": "/Applications/Quake/QuakeWebTools.html",
+			"file": "QuakeWebTools.sublime-project",
 			"settings":
 			{
-				"buffer_size": 3857,
+				"buffer_size": 599,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "/Applications/Quake/QuakeWebTools/scripts/util/filemanager.js",
+			"file": "/home/andy/Games/Quake/.gitignore",
 			"settings":
 			{
-				"buffer_size": 9652,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "/Applications/Quake/QuakeWebTools/scripts/types/mdl.js",
-			"settings":
-			{
-				"buffer_size": 5570,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "/Applications/Quake/QuakeWebTools/scripts/util/imageutil.js",
-			"settings":
-			{
-				"buffer_size": 9488,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "/Applications/Quake/QuakeWebTools/scripts/quakewebtools.js",
-			"settings":
-			{
-				"buffer_size": 4318,
+				"buffer_size": 250,
 				"line_ending": "Unix"
 			}
 		}
@@ -547,16 +523,20 @@
 	},
 	"expanded_folders":
 	[
-		"/Applications/Quake/QuakeWebTools",
-		"/Applications/Quake/QuakeWebTools/css",
-		"/Applications/Quake/QuakeWebTools/scripts",
-		"/Applications/Quake/QuakeWebTools/scripts/types",
-		"/Applications/Quake/QuakeWebTools/scripts/util",
-		"/Applications/Quake"
+		"/home/andy/Games/Quake/QuakeWebTools",
+		"/home/andy/Games/Quake/QuakeWebTools/_sublime",
+		"/home/andy/Games/Quake"
 	],
 	"file_history":
 	[
+		"/home/andy/Games/Quake/QuakeWebTools/_sublime/QuakeWebTools.sublime-workspace",
+		"/home/andy/Games/Quake/.gitignore",
+		"/home/andy/Games/Quake/QuakeWebTools/_sublime/QuakeWebTools.sublime-project",
+		"/Applications/Quake/QuakeWebTools.html",
 		"/Applications/Quake/QuakeWebTools/scripts/quakewebtools.js",
+		"/Applications/Quake/QuakeWebTools/scripts/util/imageutil.js",
+		"/Applications/Quake/QuakeWebTools/scripts/util/filemanager.js",
+		"/Applications/Quake/QuakeWebTools/scripts/types/mdl.js",
 		"/Applications/Quake/README.md",
 		"/Applications/Quake/QuakeWebTools/scripts/types/pak.js",
 		"/Applications/Quake/QuakeWebTools/scripts/util/FileManager.js",
@@ -614,7 +594,7 @@
 	],
 	"find":
 	{
-		"height": 35.0
+		"height": 25.0
 	},
 	"find_in_files":
 	{
@@ -629,6 +609,8 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"Quake",
+			"Applications",
 			"width",
 			"console.",
 			"callback_this",
@@ -678,57 +660,29 @@
 	"groups":
 	[
 		{
-			"selected": 2,
+			"selected": 1,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "/Applications/Quake/QuakeWebTools.html",
+					"file": "QuakeWebTools.sublime-project",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 3857,
+						"buffer_size": 599,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								3618,
-								3618
+								258,
+								258
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/HTML/HTML.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "/Applications/Quake/QuakeWebTools/scripts/util/filemanager.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 9652,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1310,
-								1310
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.tmLanguage"
+							"syntax": "Packages/JavaScript/JSON.tmLanguage"
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
@@ -738,87 +692,31 @@
 					"type": "text"
 				},
 				{
-					"buffer": 2,
-					"file": "/Applications/Quake/QuakeWebTools/scripts/types/mdl.js",
+					"buffer": 1,
+					"file": "/home/andy/Games/Quake/.gitignore",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 5570,
+						"buffer_size": 250,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								5350,
-								5350
+								250,
+								250
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/JavaScript/JavaScript.tmLanguage"
+							"syntax": "Packages/Text/Plain text.tmLanguage"
 						},
 						"translation.x": 0.0,
-						"translation.y": 1665.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "/Applications/Quake/QuakeWebTools/scripts/util/imageutil.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 9488,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								883,
-								883
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 324.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 4,
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "/Applications/Quake/QuakeWebTools/scripts/quakewebtools.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 4318,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								3487,
-								3487
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 1356.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 3,
 					"type": "text"
 				}
 			]
@@ -826,7 +724,7 @@
 	],
 	"incremental_find":
 	{
-		"height": 22.0
+		"height": 25.0
 	},
 	"input":
 	{
@@ -862,7 +760,7 @@
 	"project": "QuakeWebTools.sublime-project",
 	"replace":
 	{
-		"height": 40.0
+		"height": 46.0
 	},
 	"save_all_on_build": true,
 	"select_file":
@@ -900,7 +798,7 @@
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 220.0,
+	"side_bar_width": 274.0,
 	"status_bar_visible": true,
 	"template_settings":
 	{
