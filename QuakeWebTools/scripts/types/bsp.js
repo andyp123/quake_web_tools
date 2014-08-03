@@ -154,6 +154,7 @@ QuakeWebTools.BSP.prototype.initHeader = function(ds) {
   // get the number of each element. This used total_size / sizeof(type) in C.
   h.vertices.count = h.vertices.size / 12;
   h.edges.count = h.edges.size / 4;
+  h.ledges.count = h.ledges.size / 2;
   h.faces.count = h.faces.size / 20;
   h.texinfos.count = h.texinfos.size / 40;
   h.models.count = h.models.size / 64;
@@ -194,15 +195,77 @@ QuakeWebTools.BSP.prototype.initGeometry = function(ds) {
   geometry.models = ds.readType(["[]", QuakeWebTools.BSP.MODEL_T, h.models.count]);
 
   ds.seek(h.ledges.offset);
-  geometry.edge_list = ds.readType(["[]", "int32", h.edges.count]);
+  geometry.edge_list = ds.readType(["[]", "int16", h.ledges.count]);
 
+//  console.log(geometry);
   this.geometry = this.expandGeometry(geometry);
+//  console.log(this.geometry);
+}
+
+
+
+QuakeWebTools.BSP.prototype.expandGeometry = function(geometry) {
+  var models = [];
+
+  for (var i = 0; i < geometry.models.length; ++i) {
+    models[i] = this.expandModel(geometry, geometry.models[i]);
+  }
+
+  return {
+    expanded: true,
+    models: models
+  };
+}
+
+QuakeWebTools.BSP.prototype.expandModel = function(geometry, model) {
+  var face_id_lists = this.getFaceIdsPerTexture(geometry, model);
+  var faces = geometry.faces;
+
+  var geometries = [];
+
+  for (var i in face_id_lists) {
+    var buffer_geometry = this.expandModelFaces(geometry, face_id_lists[i]);
+    geometries[geometries.length] = {
+      tex_id: i,
+      geometry: buffer_geometry
+    };
+  }
+
+  return { geometries: geometries };
+}
+
+QuakeWebTools.BSP.prototype.expandModelFaces = function(geometry, face_ids) {
+  var faces = geometry.faces;
+
+  // get number of triangles required to build model
+  var num_tris = 0;
+  for (var i = 0; i < face_ids.length; ++i) {
+    var face = faces[face_ids[i]];
+    num_tris += face.num_edges - 2;
+  }
+
+  var verts = new Float32Array(num_tris * 9); // 3 vertices, xyz per tri
+  var verts_ofs = 0;
+  
+  for (var i = 0; i < face_ids.length; ++i) {
+    var face = faces[face_ids[i]];
+    verts_ofs = this.addFaceVerts(geometry, face, verts, verts_ofs);
+  }
+
+  // build and return a three.js BufferGeometry
+  var buffer_geometry = new THREE.BufferGeometry();
+  buffer_geometry.attributes = {
+    position: { itemSize: 3, array: verts }
+  };
+  buffer_geometry.computeBoundingSphere();
+
+  return buffer_geometry;
 }
 
 /**
 * Expand the raw geometry into something useable by THREE.js
 */
-QuakeWebTools.BSP.prototype.getSeparatedFacesPerTexture = function(geometry, model) {
+QuakeWebTools.BSP.prototype.getFaceIdsPerTexture = function(geometry, model) {
   var texinfos = geometry.texinfos;
   var faces = geometry.faces;
 
@@ -213,38 +276,49 @@ QuakeWebTools.BSP.prototype.getSeparatedFacesPerTexture = function(geometry, mod
   for (var i = start; i < end; ++i) {
     var face = faces[i];
     var tex_id = texinfos[face.texinfo_id].tex_id;
-    var face_ids = face_id_lists[i] || { ids: [], num_verts: 0 };
-    face_ids.ids[face_ids.ids.length] = i;
-    face_ids.num_verts += face.num_edges; // can plan ahead...
-    face_id_lists[i] = face_ids;
+    var face_ids = face_id_lists[tex_id] || [];
+    face_ids[face_ids.length] = i;
+    face_id_lists[tex_id] = face_ids;
   }
 
   return face_id_lists;
 }
 
-QuakeWebTools.BSP.prototype.getNumTris = function(faces, face_ids) {
-  var num_tris = 0;
-  
-  for (var i = 0; i < face_ids.length; ++i) {
-    var face = faces[face_ids[i]];
-    num_tris += face.num_edges - 2;
-  }
-
-  return num_tris;
-}
-
-QuakeWebTools.BSP.prototype.getFaceVerts = function(geometry, face) {
+QuakeWebTools.BSP.prototype.addFaceVerts = function(geometry, face, verts, verts_ofs) {
   var edge_list = geometry.edge_list;
   var edges = geometry.edges;
   var vertices = geometry.vertices;
 
-  var verts = [];
+// python code from blender bsp importer
+/*
+  # populate a list with vertices
+  face_vertices = []
+  face_uvs = []
+
+  for i in range(0,face.ledge_num):
+      edge_index = edge_index_list[face.ledge_id+i]
+      # assuming vertex order is 0->1 
+      edge_ofs = edge_index * edge_size
+      vert_id = 0
+      if edge_index < 0:
+          # vertex order is 1->0
+          edge_ofs = -edge_index * edge_size
+          vert_id = 1
+      
+      edge = BSPEdge._make(edge_struct.unpack_from(edge_data[edge_ofs:edge_ofs+edge_size]))
+      vofs = edge[vert_id] 
+      face_vertices.append(meshVerts[vofs])
+            usedVerts[vofs] = True
+*/
+
+  var vert_ids = [];
   var start = face.edge_id;
   var end = start + face.num_edges;
   for (var i = start; i < end; ++i) {
     var edge_id = edge_list[i];
     var edge = edges[Math.abs(edge_id)];
     var id_a, id_b;
+    try {
     if (edge_id > 0) {
       id_a = edge.v1;
       id_b = edge.v2;
@@ -252,22 +326,45 @@ QuakeWebTools.BSP.prototype.getFaceVerts = function(geometry, face) {
       id_a = edge.v2;
       id_b = edge.v1;
     }
-    verts[verts.length] = vertices[id_a];
+    } catch(e) {
+      console.log(face);
+      console.log("start: " + start + ", end: " + end);
+      console.log("edge " + edge_id + " of " + face.num_edges);
+      console.log(edge);
+      console.log(e);
+      var bum = 1;
+    }
+    vert_ids[vert_ids.length] = id_a;
     if (i < end - 1) {
-      verts[verts.length] = vertices[id_b];
+      vert_ids[vert_ids.length] = id_b;
     }
   }
 
-  return verts;
-}
+  var num_tris = vert_ids.length - 2;
+  for (var i = 0; i < num_tris; ++i) {
+    var a = vert_ids[0];
+    var b = vert_ids[i + 1];
+    var c = vert_ids[i + 2];
 
+    var vert, vi;
+    vi = verts_ofs + i * 9;
+    vert = vertices[a];
+    verts[vi]     = vert.x;
+    verts[vi + 1] = vert.y;
+    verts[vi + 2] = vert.z;
+    vert = vertices[b];
+    verts[vi + 3] = vert.x;
+    verts[vi + 4] = vert.y;
+    verts[vi + 5] = vert.z;
+    vert = vertices[c];
+    verts[vi + 6] = vert.x;
+    verts[vi + 7] = vert.y;
+    verts[vi + 8] = vert.z;
 
-QuakeWebTools.BSP.prototype.expandModel = function(geometry, model) {
+    // TODO: add uvs somewhere
+  }
 
-}
-
-QuakeWebTools.BSP.prototype.expandGeometry = function(geometry) {
-  return geometry;
+  return vi + 9; // next position in verts
 }
 
 /**

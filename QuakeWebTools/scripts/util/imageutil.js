@@ -247,7 +247,7 @@ QuakeWebTools.ImageUtil.generateHTMLPreview = function(images, palette, element_
     var div = document.createElement("div");
     div.className = "item-box";
     div.appendChild(img);
-    div.innerHTML += "<br><span class='item-name'>" + image_data.name
+    div.innerHTML += "<br><span class='item-name'>[" + i + "] " + image_data.name
                    + "</span><span class='item-info'>" + img_info
                    + "</span>";
     if (i < limit - 1) {
