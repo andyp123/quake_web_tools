@@ -28,7 +28,7 @@ http://www.gamers.org/dEngine/quake/spec/quake-spec32.html
 + Implement a simple but robust file manager
     - file manager is exposed to user and allows them to upload/download files
     - Allow files to be loaded locally, from a URL or from inside a PAK file
-    - drag and drop input via dropzone.js
+    - drag and drop input
     - file 'url' should support files inside other files
     - how deep should this go? (e.g. texture in a WAD inside a PAK)
 + Implement faster directory for browsing PAK, WAD and BSP files
@@ -46,12 +46,12 @@ http://www.gamers.org/dEngine/quake/spec/quake-spec32.html
 + Save modified PAK support
 + Implement Quake file type read support
     - PAK [done]
-    - WAD [done]
+    - WAD [done] + animation
     - LMP [done]
     - PAL [done]
-    - SPR
-    - BSP
-    - MDL
+    - SPR [done] + animation
+    - BSP [50%] + miptex animation
+    - MDL [done]
     - DAT [no support planned]
     - BIN [no support planned]
     - RC  [ascii format]

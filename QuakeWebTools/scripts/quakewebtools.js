@@ -160,6 +160,7 @@ function app_main() {
 }
 
 
+// TODO: move this functionality to suitable place and tidy up code
 function viewPAK(pak) {
   var header = pak.header;
   var directory = pak.directory;
@@ -180,6 +181,82 @@ function viewPAK(pak) {
 
   div.appendChild(ul);
   div_content.appendChild(div);
+}
+
+function viewBSP(bsp) {
+  var clock;
+  var scene, camera, renderer;
+  var light_ambient, light_directional;
+  var controls;
+
+  var animate_id = 0;
+  var frame_id = 0;
+
+  function init() {
+    var div_content = document.getElementById("file-content");
+    var width = div_content.offsetWidth;
+    var height = 300;
+
+    clock = new THREE.Clock();
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(75, width / height, 1, 10000);
+
+    // need to add MANY objects to scene
+    var material = new THREE.MeshLambertMaterial();
+    var ws_model = bsp.geometry.models[0];
+    for (var i = 0; i < ws_model.geometries.length; ++i) {
+      var geometry = ws_model.geometries[i].geometry;
+      var mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+      mesh.rotation.x = -90 * Math.PI / 180;
+      mesh.rotation.z = -90 * Math.PI / 180;
+
+      // wfh is temporary
+      var wfh = new THREE.WireframeHelper(mesh, 0x666666);
+      wfh.material.linewidth = 2;
+      scene.add(wfh);
+      wfh.rotation.x = -90 * Math.PI / 180;
+      wfh.rotation.z = -90 * Math.PI / 180;
+    }
+
+    light_ambient = new THREE.AmbientLight(0x222222);
+    light_directional = new THREE.DirectionalLight(0xff0000);
+    light_directional.position.set(1, 1, 1).normalize();
+    scene.add(light_ambient);
+    scene.add(light_directional);
+
+    camera.position.z = 10;
+
+    renderer = new THREE.WebGLRenderer();
+    renderer.setSize(width, height);
+
+    div_content.appendChild(renderer.domElement);
+
+    controls = new THREE.FirstPersonControls(camera, renderer.domElement);
+    controls.movementSpeed = 500;
+    controls.lookSpeed = 0.5;
+  }
+
+  function render() {
+    renderer.render(scene, camera);
+  }
+
+  function animate() {
+    var QWT = QuakeWebTools;
+    if (QWT.STATS !== undefined) stats.begin();
+
+    animate_id = requestAnimationFrame(animate);
+    controls.update( clock.getDelta() );
+    render();
+
+    if(QWT.STATS !== undefined) stats.end();
+  }
+
+  init();
+  animate();
+
+  // need a way to deal with all these kind of "threads"
+  return animate_id;
 }
 
 function viewMDL(mdl) {

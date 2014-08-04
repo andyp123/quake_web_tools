@@ -39,12 +39,16 @@ QuakeWebTools.ImageUtil.newImageData = function(name, width, height) {
 * @param {String} name - Name of the file or directory entry.
 * @param {ArrayBuffer} arraybuffer - An array buffer that represents the file containing the image.
 * @param {WADEntry} entry - A WAD or BSP directory entry containing detailed information about the image.
+* @param {Boolean} header_only Set to true to retrieve only the image header
 * @return {QuakeImageData} Returns the image data.
 * @static
 */
-QuakeWebTools.ImageUtil.getImageData = function(name, arraybuffer, entry) {
+QuakeWebTools.ImageUtil.getImageData = function(name, arraybuffer, entry, header_only) {
   var IU = QuakeWebTools.ImageUtil;
   var WAD = QuakeWebTools.WAD;
+
+  // turning this on will stop the image data from being returned
+  header_only = header_only || false;
 
   // most non-miptex and non-special case are this format
   var header_type = IU.HEADER_SIMPLE;
@@ -77,7 +81,6 @@ QuakeWebTools.ImageUtil.getImageData = function(name, arraybuffer, entry) {
     header_type = IU.HEADER_MIPTEX;
   }
 
-  // FIXME: convert to use DataStream.js
   var byteofs = entry.offset;
 
   switch (header_type) {
@@ -86,6 +89,7 @@ QuakeWebTools.ImageUtil.getImageData = function(name, arraybuffer, entry) {
     /*image_data.name = getString(data, byteofs, 16, le);*/ byteofs += 16;
     image_data.width = data.getInt32(byteofs, le);          byteofs += 4;
     image_data.height = data.getInt32(byteofs, le);         byteofs += 4;
+    if (header_only) break;
     var ofs1 = entry.offset + data.getInt32(byteofs, le);   byteofs += 4;
     var ofs2 = entry.offset + data.getInt32(byteofs, le);   byteofs += 4;
     var ofs3 = entry.offset + data.getInt32(byteofs, le);   byteofs += 4;
@@ -99,9 +103,11 @@ QuakeWebTools.ImageUtil.getImageData = function(name, arraybuffer, entry) {
   case IU.HEADER_SIMPLE:
     image_data.width = data.getInt32(byteofs, le);      byteofs += 4;
     image_data.height = data.getInt32(byteofs, le);     byteofs += 4;
+    if (header_only) break;
     image_data.pixels = new Uint8Array(arraybuffer.slice(byteofs, byteofs + entry.size));
     break;
   case IU.HEADER_NONE:
+    if (header_only) break;
     // this will be special case and palette only, so width and height are already set
     image_data.pixels = new Uint8Array(arraybuffer.slice(byteofs, byteofs + entry.size));
     break;

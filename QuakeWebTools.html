@@ -11,6 +11,7 @@
     <script src="QuakeWebTools/scripts/lib/DataStream.js"></script>
     <script src="QuakeWebTools/scripts/lib/three.js"></script>
     <script src="QuakeWebTools/scripts/lib/orbitcontrols.js"></script>
+    <script src="QuakeWebTools/scripts/lib/firstpersoncontrols.js"></script>
     <!--util-->
     <script src="QuakeWebTools/scripts/util/filemanager.js"></script>
     <script src="QuakeWebTools/scripts/util/fileutil.js"></script>
@@ -110,6 +111,7 @@ holder.ondrop = function (e) {
       break;
     case "bsp":
       var bsp = file_entry.obj;
+      QWT.ANIMATION_ID = viewBSP(bsp);
       QWT.ImageUtil.generateHTMLPreview({image_infos: bsp.miptex_directory, arraybuffer: bsp.ab},
           QWT.DEFAULT_PALETTE, "file-content");
       break;

@@ -1,27 +1,11 @@
 var QuakeWebTools = QuakeWebTools || {};
 
 /*
-need to parse bsp and organise into geometry sutiable for displaying with
-three.js buffer geometries. Note that what will probably need to happen is
-for it to be separated into different buffers by texture, unless I can figure
-out how to get multiple materials on one BufferGeometry.
-
-Mesh preprocessing must deal with this.
-1. generate list of textures.
-NOTE: currently skipping indexed materials that are corrupted. They need replacing
-with a default texture instead, in order to keep the indices correct!
-2. calculate num_tris PER MATERIAL.
-This allows buffer of the correct size to be allocated.
-3. Allocate buffers in an array mirroring the materials array
-4. Iterate polygons and
-
-
-use three fps camera for viewing controls
-
-file type idea:
-completely OT, but how about a binary file with an UTF-8 JSON header that
-defines the file structure. This way the header is readable and the data is
-nicely compressed and structured.
+TODO:
++ add vertex uvs
++ add face normals
++ generate materials for three.js
++ use three.js fps camera for viewing controls
 */
 
 /**
@@ -154,7 +138,7 @@ QuakeWebTools.BSP.prototype.initHeader = function(ds) {
   // get the number of each element. This used total_size / sizeof(type) in C.
   h.vertices.count = h.vertices.size / 12;
   h.edges.count = h.edges.size / 4;
-  h.ledges.count = h.ledges.size / 2;
+  h.ledges.count = h.ledges.size / 4;
   h.faces.count = h.faces.size / 20;
   h.texinfos.count = h.texinfos.size / 40;
   h.models.count = h.models.size / 64;
@@ -195,11 +179,11 @@ QuakeWebTools.BSP.prototype.initGeometry = function(ds) {
   geometry.models = ds.readType(["[]", QuakeWebTools.BSP.MODEL_T, h.models.count]);
 
   ds.seek(h.ledges.offset);
-  geometry.edge_list = ds.readType(["[]", "int16", h.ledges.count]);
+  geometry.edge_list = ds.readType(["[]", "int32", h.ledges.count]);
 
-//  console.log(geometry);
+  console.log(geometry);
   this.geometry = this.expandGeometry(geometry);
-//  console.log(this.geometry);
+  console.log(this.geometry);
 }
 
 
@@ -224,7 +208,8 @@ QuakeWebTools.BSP.prototype.expandModel = function(geometry, model) {
   var geometries = [];
 
   for (var i in face_id_lists) {
-    var buffer_geometry = this.expandModelFaces(geometry, face_id_lists[i]);
+    var texture_info = this.miptex_directory[i];
+    var buffer_geometry = this.expandModelFaces(geometry, face_id_lists[i], texture_info);
     geometries[geometries.length] = {
       tex_id: i,
       geometry: buffer_geometry
@@ -234,7 +219,7 @@ QuakeWebTools.BSP.prototype.expandModel = function(geometry, model) {
   return { geometries: geometries };
 }
 
-QuakeWebTools.BSP.prototype.expandModelFaces = function(geometry, face_ids) {
+QuakeWebTools.BSP.prototype.expandModelFaces = function(geometry, face_ids, texture_info) {
   var faces = geometry.faces;
 
   // get number of triangles required to build model
@@ -245,17 +230,19 @@ QuakeWebTools.BSP.prototype.expandModelFaces = function(geometry, face_ids) {
   }
 
   var verts = new Float32Array(num_tris * 9); // 3 vertices, xyz per tri
+  var uvs = new Float32Array(num_tris * 6); // 3 uvs, uv per tri
   var verts_ofs = 0;
   
   for (var i = 0; i < face_ids.length; ++i) {
     var face = faces[face_ids[i]];
-    verts_ofs = this.addFaceVerts(geometry, face, verts, verts_ofs);
+    verts_ofs = this.addFaceVerts(geometry, face, verts, uvs, verts_ofs);
   }
 
   // build and return a three.js BufferGeometry
   var buffer_geometry = new THREE.BufferGeometry();
   buffer_geometry.attributes = {
-    position: { itemSize: 3, array: verts }
+    position: { itemSize: 3, array: verts },
+    uv: { itemSize: 2, array: uvs }
   };
   buffer_geometry.computeBoundingSphere();
 
@@ -284,87 +271,63 @@ QuakeWebTools.BSP.prototype.getFaceIdsPerTexture = function(geometry, model) {
   return face_id_lists;
 }
 
-QuakeWebTools.BSP.prototype.addFaceVerts = function(geometry, face, verts, verts_ofs) {
+QuakeWebTools.BSP.prototype.addFaceVerts = function(geometry, face, verts, uvs, verts_ofs) {
   var edge_list = geometry.edge_list;
   var edges = geometry.edges;
   var vertices = geometry.vertices;
 
-// python code from blender bsp importer
-/*
-  # populate a list with vertices
-  face_vertices = []
-  face_uvs = []
-
-  for i in range(0,face.ledge_num):
-      edge_index = edge_index_list[face.ledge_id+i]
-      # assuming vertex order is 0->1 
-      edge_ofs = edge_index * edge_size
-      vert_id = 0
-      if edge_index < 0:
-          # vertex order is 1->0
-          edge_ofs = -edge_index * edge_size
-          vert_id = 1
-      
-      edge = BSPEdge._make(edge_struct.unpack_from(edge_data[edge_ofs:edge_ofs+edge_size]))
-      vofs = edge[vert_id] 
-      face_vertices.append(meshVerts[vofs])
-            usedVerts[vofs] = True
-*/
-
   var vert_ids = [];
   var start = face.edge_id;
   var end = start + face.num_edges;
+
   for (var i = start; i < end; ++i) {
     var edge_id = edge_list[i];
     var edge = edges[Math.abs(edge_id)];
-    var id_a, id_b;
-    try {
     if (edge_id > 0) {
-      id_a = edge.v1;
-      id_b = edge.v2;
+      vert_ids[vert_ids.length] = edge.v1;
     } else {
-      id_a = edge.v2;
-      id_b = edge.v1;
-    }
-    } catch(e) {
-      console.log(face);
-      console.log("start: " + start + ", end: " + end);
-      console.log("edge " + edge_id + " of " + face.num_edges);
-      console.log(edge);
-      console.log(e);
-      var bum = 1;
-    }
-    vert_ids[vert_ids.length] = id_a;
-    if (i < end - 1) {
-      vert_ids[vert_ids.length] = id_b;
+      vert_ids[vert_ids.length] = edge.v2;
     }
   }
 
   var num_tris = vert_ids.length - 2;
   for (var i = 0; i < num_tris; ++i) {
-    var a = vert_ids[0];
+    // reverse winding order to have correct normals
+    var c = vert_ids[0];
     var b = vert_ids[i + 1];
-    var c = vert_ids[i + 2];
+    var a = vert_ids[i + 2];
 
-    var vert, vi;
-    vi = verts_ofs + i * 9;
+    var vert, vi, uvi;
+    vi = (verts_ofs + i) * 9;
+    uvi = (verts_ofs + i) * 6;
     vert = vertices[a];
     verts[vi]     = vert.x;
     verts[vi + 1] = vert.y;
     verts[vi + 2] = vert.z;
+    //uv
     vert = vertices[b];
     verts[vi + 3] = vert.x;
     verts[vi + 4] = vert.y;
     verts[vi + 5] = vert.z;
+    //uv
     vert = vertices[c];
     verts[vi + 6] = vert.x;
     verts[vi + 7] = vert.y;
     verts[vi + 8] = vert.z;
+    //uv
 
     // TODO: add uvs somewhere
+    // texture width and height
+    // tex info
+    // vertex position
+
+
+    //uv calc from blender importer
+    //u =  (loopElement.vert.co.dot(texS) + texinfo.s_dist)/texture_specs['width']
+    //v = -(loopElement.vert.co.dot(texT) + texinfo.t_dist)/texture_specs['height']
   }
 
-  return vi + 9; // next position in verts
+  return verts_ofs + i; // next position in verts
 }
 
 /**
