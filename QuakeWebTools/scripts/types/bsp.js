@@ -126,7 +126,7 @@ QuakeWebTools.BSP.prototype.init = function() {
   this.initMiptexDirectory(ds);
   this.initGeometry(ds);
 
-  console.log(this);
+  //console.log(this);
 }
 
 /**
@@ -181,9 +181,9 @@ QuakeWebTools.BSP.prototype.initGeometry = function(ds) {
   ds.seek(h.ledges.offset);
   geometry.edge_list = ds.readType(["[]", "int32", h.ledges.count]);
 
-  console.log(geometry);
+  //console.log(geometry);
   this.geometry = this.expandGeometry(geometry);
-  console.log(this.geometry);
+  //console.log(this.geometry);
 }
 
 

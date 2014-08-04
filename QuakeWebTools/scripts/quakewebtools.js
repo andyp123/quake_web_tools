@@ -212,7 +212,7 @@ function viewBSP(bsp) {
       mesh.rotation.z = -90 * Math.PI / 180;
 
       // wfh is temporary
-      var wfh = new THREE.WireframeHelper(mesh, 0x666666);
+      var wfh = new THREE.WireframeHelper(mesh, 0x444444);
       wfh.material.linewidth = 2;
       scene.add(wfh);
       wfh.rotation.x = -90 * Math.PI / 180;
