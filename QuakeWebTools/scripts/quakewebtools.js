@@ -201,25 +201,27 @@ function viewBSP(bsp) {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, width / height, 1, 10000);
 
-    // need to add MANY objects to scene
-    var material = new THREE.MeshLambertMaterial();
     var materials = bsp.getThreeMaterialDirectory();
-    //material = materials[0];
-    var ws_model = bsp.geometry.models[0];
-    for (var i = 0; i < ws_model.geometries.length; ++i) {
-      var geometry = ws_model.geometries[i].geometry;
-      var mat_id = ws_model.geometries[i].tex_id;
-      var mesh = new THREE.Mesh(geometry, materials[mat_id]);
-      scene.add(mesh);
-      mesh.rotation.x = -90 * Math.PI / 180;
-      mesh.rotation.z = -90 * Math.PI / 180;
+    var models = bsp.geometry.models;
 
-      // wfh is temporary
-      var wfh = new THREE.WireframeHelper(mesh, 0x444444);
-      wfh.material.linewidth = 3;
-      scene.add(wfh);
-      wfh.rotation.x = -90 * Math.PI / 180;
-      wfh.rotation.z = -90 * Math.PI / 180;
+    for (var i = 0; i < models.length; ++i) {
+      var geometries = models[i].geometries;
+
+      for (var j = 0; j < geometries.length; ++j) {
+        var geometry = geometries[j].geometry;
+        var mat_id = geometries[j].tex_id;
+        var mesh = new THREE.Mesh(geometry, materials[mat_id]);
+        scene.add(mesh);
+        mesh.rotation.x = -90 * Math.PI / 180;
+        mesh.rotation.z = -90 * Math.PI / 180;
+
+        // wfh is temporary
+        var wfh = new THREE.WireframeHelper(mesh, 0x666666);
+        wfh.material.linewidth = 2;
+        scene.add(wfh);
+        wfh.rotation.x = -90 * Math.PI / 180;
+        wfh.rotation.z = -90 * Math.PI / 180;
+      }
     }
 
     camera.position.z = 10;
