@@ -203,27 +203,24 @@ function viewBSP(bsp) {
 
     // need to add MANY objects to scene
     var material = new THREE.MeshLambertMaterial();
+    var materials = bsp.getThreeMaterialDirectory();
+    //material = materials[0];
     var ws_model = bsp.geometry.models[0];
     for (var i = 0; i < ws_model.geometries.length; ++i) {
       var geometry = ws_model.geometries[i].geometry;
-      var mesh = new THREE.Mesh(geometry, material);
+      var mat_id = ws_model.geometries[i].tex_id;
+      var mesh = new THREE.Mesh(geometry, materials[mat_id]);
       scene.add(mesh);
       mesh.rotation.x = -90 * Math.PI / 180;
       mesh.rotation.z = -90 * Math.PI / 180;
 
       // wfh is temporary
       var wfh = new THREE.WireframeHelper(mesh, 0x444444);
-      wfh.material.linewidth = 2;
+      wfh.material.linewidth = 3;
       scene.add(wfh);
       wfh.rotation.x = -90 * Math.PI / 180;
       wfh.rotation.z = -90 * Math.PI / 180;
     }
-
-    light_ambient = new THREE.AmbientLight(0x222222);
-    light_directional = new THREE.DirectionalLight(0xff0000);
-    light_directional.position.set(1, 1, 1).normalize();
-    scene.add(light_ambient);
-    scene.add(light_directional);
 
     camera.position.z = 10;
 

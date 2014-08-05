@@ -31,6 +31,7 @@ QuakeWebTools.ImageUtil.newImageData = function(name, width, height) {
   };
 };
 
+//TODO: remove header_only?
 /**
 * Gets image data in the form { name, width, height, pixels, pixel_type }
 * where pixels is an arraybuffer containing paletised image data.

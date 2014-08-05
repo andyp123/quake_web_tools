@@ -125,8 +125,6 @@ QuakeWebTools.BSP.prototype.init = function() {
   this.initHeader(ds);
   this.initMiptexDirectory(ds);
   this.initGeometry(ds);
-
-  //console.log(this);
 }
 
 /**
@@ -181,9 +179,7 @@ QuakeWebTools.BSP.prototype.initGeometry = function(ds) {
   ds.seek(h.ledges.offset);
   geometry.edge_list = ds.readType(["[]", "int32", h.ledges.count]);
 
-  //console.log(geometry);
   this.geometry = this.expandGeometry(geometry);
-  //console.log(this.geometry);
 }
 
 
@@ -208,8 +204,8 @@ QuakeWebTools.BSP.prototype.expandModel = function(geometry, model) {
   var geometries = [];
 
   for (var i in face_id_lists) {
-    var texture_info = this.miptex_directory[i];
-    var buffer_geometry = this.expandModelFaces(geometry, face_id_lists[i], texture_info);
+    var miptex_entry = this.miptex_directory[i];
+    var buffer_geometry = this.expandModelFaces(geometry, face_id_lists[i], miptex_entry);
     geometries[geometries.length] = {
       tex_id: i,
       geometry: buffer_geometry
@@ -219,7 +215,7 @@ QuakeWebTools.BSP.prototype.expandModel = function(geometry, model) {
   return { geometries: geometries };
 }
 
-QuakeWebTools.BSP.prototype.expandModelFaces = function(geometry, face_ids, texture_info) {
+QuakeWebTools.BSP.prototype.expandModelFaces = function(geometry, face_ids, miptex_entry) {
   var faces = geometry.faces;
 
   // get number of triangles required to build model
@@ -235,7 +231,7 @@ QuakeWebTools.BSP.prototype.expandModelFaces = function(geometry, face_ids, text
   
   for (var i = 0; i < face_ids.length; ++i) {
     var face = faces[face_ids[i]];
-    verts_ofs = this.addFaceVerts(geometry, face, verts, uvs, verts_ofs);
+    verts_ofs = this.addFaceVerts(geometry, face, verts, uvs, verts_ofs, miptex_entry);
   }
 
   // build and return a three.js BufferGeometry
@@ -271,14 +267,21 @@ QuakeWebTools.BSP.prototype.getFaceIdsPerTexture = function(geometry, model) {
   return face_id_lists;
 }
 
-QuakeWebTools.BSP.prototype.addFaceVerts = function(geometry, face, verts, uvs, verts_ofs) {
+QuakeWebTools.BSP.prototype.addFaceVerts = function(geometry, face, verts, uvs, verts_ofs, miptex_entry) {
   var edge_list = geometry.edge_list;
   var edges = geometry.edges;
   var vertices = geometry.vertices;
+  var texinfo = geometry.texinfos[face.texinfo_id];
+  var tex_width = miptex_entry.width;
+  var tex_height = miptex_entry.height;
 
   var vert_ids = [];
   var start = face.edge_id;
   var end = start + face.num_edges;
+
+  var dot = function(a, b) {
+    return (a.x * b.x + a.y * b.y + a.z * b.z);
+  }
 
   for (var i = start; i < end; ++i) {
     var edge_id = edge_list[i];
@@ -304,27 +307,22 @@ QuakeWebTools.BSP.prototype.addFaceVerts = function(geometry, face, verts, uvs, 
     verts[vi]     = vert.x;
     verts[vi + 1] = vert.y;
     verts[vi + 2] = vert.z;
-    //uv
+    uvs[uvi]     =  (dot(vert, texinfo.vec_s) + texinfo.dist_s) / tex_width;
+    uvs[uvi + 1] = -(dot(vert, texinfo.vec_t) + texinfo.dist_t) / tex_height;
+
     vert = vertices[b];
     verts[vi + 3] = vert.x;
     verts[vi + 4] = vert.y;
     verts[vi + 5] = vert.z;
-    //uv
+    uvs[uvi + 2] =  (dot(vert, texinfo.vec_s) + texinfo.dist_s) / tex_width;
+    uvs[uvi + 3] = -(dot(vert, texinfo.vec_t) + texinfo.dist_t) / tex_height;
+
     vert = vertices[c];
     verts[vi + 6] = vert.x;
     verts[vi + 7] = vert.y;
     verts[vi + 8] = vert.z;
-    //uv
-
-    // TODO: add uvs somewhere
-    // texture width and height
-    // tex info
-    // vertex position
-
-
-    //uv calc from blender importer
-    //u =  (loopElement.vert.co.dot(texS) + texinfo.s_dist)/texture_specs['width']
-    //v = -(loopElement.vert.co.dot(texT) + texinfo.t_dist)/texture_specs['height']
+    uvs[uvi + 4] =  (dot(vert, texinfo.vec_s) + texinfo.dist_s) / tex_width;
+    uvs[uvi + 5] = -(dot(vert, texinfo.vec_t) + texinfo.dist_t) / tex_height;
   }
 
   return verts_ofs + i; // next position in verts
@@ -334,6 +332,8 @@ QuakeWebTools.BSP.prototype.addFaceVerts = function(geometry, face, verts, uvs, 
 * Initialise the mip texture directory.
 */
 QuakeWebTools.BSP.prototype.initMiptexDirectory = function(ds) {
+  var IU = QuakeWebTools.ImageUtil;
+
   // get offsets to each texture
   var base_offset = this.header.miptex.offset;
   ds.seek(base_offset);
@@ -355,7 +355,10 @@ QuakeWebTools.BSP.prototype.initMiptexDirectory = function(ds) {
       size: (miptex.width * miptex.height),
       type: "D".charCodeAt(0),
       compression: 0,
-      name: trim(miptex.name)
+      name: trim(miptex.name),
+      // additional parameters useful for generating uvs
+      width: miptex.width,
+      height: miptex.height
     };
 
     if (entry.name == "") {
@@ -368,6 +371,31 @@ QuakeWebTools.BSP.prototype.initMiptexDirectory = function(ds) {
   }
 
   this.miptex_directory = miptex_directory;
+}
+
+/**
+* Generate an array of THREE.js materials and return them
+*/
+QuakeWebTools.BSP.prototype.getThreeMaterialDirectory = function() {
+  if (this.materials === undefined) {
+    var QWT = QuakeWebTools;
+
+    var materials = [];
+
+    for (var i in this.miptex_directory) {
+      var entry = this.miptex_directory[i];
+      var image_data = QWT.ImageUtil.getImageData(entry.name, this.ab, entry);
+      var data = QWT.ImageUtil.expandImageData(image_data, QWT.DEFAULT_PALETTE, null, true);
+      var texture = new THREE.DataTexture(data, image_data.width, image_data.height, THREE.RGBAFormat);
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.needsUpdate = true;
+      materials[i] = new THREE.MeshBasicMaterial({ map: texture });
+    }
+
+    this.materials = materials;
+  }
+
+  return this.materials;
 }
 
 /**
